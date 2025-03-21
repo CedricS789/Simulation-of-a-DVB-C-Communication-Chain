@@ -1,6 +1,7 @@
 %% 
 clc; clear; close all; 
  
+
 %% ----------------- Parameters ----------------- 
 Nbt = 100;                              % Total number of bits 
 Nbs = 4;                                % Number of bits per symbol 
@@ -16,6 +17,7 @@ rolloff = 0.3;                          % Roll-off factor (β)
 span    = 6;                            % Filter span in symbols 
 taps = span * M + 1;                    % Total number of taps in the filter 
  
+
 %% ----------------- Step 1: Random bit generation and bit mapping ----------------- 
 if Nbs > 1 
     symb_tx = mapping(bits_tx, Nbs, 'qam'); 
@@ -25,21 +27,19 @@ end
  
 
 %% ----------------- Step 2: Generate RRC Filter ----------------- 
-% Generate time vector for filter
-t = (-span*M/2 : 1 : span*M/2) / Fs;
+symbols_up = upsample(symb_tx, M);                      % Upsample the symbols
+rrc_filter = rcosdesign(rolloff, span, M, 'sqrt');      % Generate RRC filter coefficients
+tx_filtered = filter(rrc_filter, 1, symbols_up);        % Apply RRC filter to the signal
 
-% Generate RRC filter coefficients
-rrc_filter = rcosdesign(rolloff, span, M, 'sqrt');
-
-% Plot the filter impulse response
+%% ----------------- Plot: RRC Filter Impulse Response and Frequency Response -----------------
 figure;
+t = (-span*M/2 : 1 : span*M/2) / Fs;                    % Time vector for filter taps
 plot(t, rrc_filter);
 title('Root Raised Cosine Filter Impulse Response');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
-% Plot frequency response
 [H, f] = freqz(rrc_filter, 1, 1024, Fs);
 figure;
 plot(f/1e6, 20*log10(abs(H)));
@@ -49,14 +49,18 @@ ylabel('Magnitude (dB)');
 grid on;
 xlim([0 Fs/2e6]);
 
-%% ----------------- Step 3: Upsample and filter the signal ----------------- 
-% Upsample the symbols
-symbols_up = upsample(symb_tx, M);
 
-% Apply RRC filter to the signal
-tx_filtered = filter(rrc_filter, 1, symbols_up);
+%% ----------------- Plot: QAM Constellation Diagram ----------------- 
+figure; 
+plot(real(symb_tx), imag(symb_tx), 'o'); 
+title('QAM Constellation Diagram'); 
+xlabel('In-phase'); 
+ylabel('Quadrature'); 
+grid on; 
+axis equal;
 
-% Plot time domain signal
+
+%% ----------------- Plot: Time and Frequency Domain of the Filtered Signal -----------------
 t_sig = (0:length(tx_filtered)-1) / Fs;
 figure;
 subplot(2,1,1);
@@ -73,7 +77,7 @@ xlabel('Time (μs)');
 ylabel('Amplitude');
 grid on;
 
-% Plot spectrum of the filtered signal
+%% ----------------- Plot: Spectrum of the Filtered Signal -----------------
 N_fft = 2^nextpow2(length(tx_filtered));
 TX_freq = fftshift(fft(tx_filtered, N_fft))/length(tx_filtered);
 f_axis = (-N_fft/2:N_fft/2-1)*Fs/N_fft;
@@ -86,11 +90,3 @@ ylabel('Power Spectral Density (dB)');
 grid on;
 xlim([-Fs/2e6 Fs/2e6]);
 
-%% ----------------- Plot: QAM Constellation Diagram ----------------- 
-figure; 
-plot(real(symb_tx), imag(symb_tx), 'o'); 
-title('QAM Constellation Diagram'); 
-xlabel('In-phase'); 
-ylabel('Quadrature'); 
-grid on; 
-axis equal;
