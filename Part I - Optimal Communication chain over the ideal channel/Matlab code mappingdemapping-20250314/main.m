@@ -10,13 +10,15 @@ bits_tx = randi([0 1], Nbt, 1);         % Random bit sequence
 M = 4;                                  % Oversampling factor (samples per symbol) 
 sym_rate = 5e6;                         % Symbol rate [5 Msymb/s] 
 Tsym = 1 / sym_rate;                    % Symbol duration 
-Fs = M * 2*sym_rate;                      % Sampling frequency 
+Fs = M * 2*sym_rate;                    % Sampling frequency 
  
-BWD_RCC = 6e6;                          % Bandwidth of the RRC filter 
-rolloff = 0.3;                          % Roll-off factor (β) 
-span    = 6;                            % Filter span in symbols 
-taps = span * M + 1;                    % Total number of taps in the filter 
+rolloff = 0.3;                          % Roll-off factor => Bandwidth = 6Mz
+span    = 12;                           % Defines filter duration in number of symbol periods 
+taps = span * M + 1;                     % Total number of taps in the filter 
  
+
+
+
 
 %% ----------------- Step 1: Random bit generation and bit mapping ----------------- 
 if Nbs > 1 
@@ -31,6 +33,7 @@ symbols_up = upsample(symb_tx, M);                      % Upsample the symbols
 rrc_filter = rcosdesign(rolloff, span, M, 'sqrt');      % Generate RRC filter coefficients
 tx_filtered = filter(rrc_filter, 1, symbols_up);        % Apply RRC filter to the signal
 
+
 %% ----------------- Plot: RRC Filter Impulse Response and Frequency Response -----------------
 figure;
 t = (-span*M/2 : 1 : span*M/2) / Fs;                    % Time vector for filter taps
@@ -40,14 +43,18 @@ xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
 
-[H, f] = freqz(rrc_filter, 1, 1024, Fs);
+
+% Use FFT instead of freqz
 figure;
-plot(f/1e6, 20*log10(abs(H)));
+N = 1024;                           % Number of FFT points
+H = fft(rrc_filter, N);             % Compute FFT with zero-padding to N points
+H_shifted = fftshift(H);            % Shift to center zero frequency
+f = (-N/2 : N/2 - 1) * (Fs / N);    % Frequency axis from -Fs/2 to Fs/2
+plot(f/1e6, 20*log10(abs(H_shifted)));
 title('Root Raised Cosine Filter Frequency Response');
 xlabel('Frequency (MHz)');
 ylabel('Magnitude (dB)');
 grid on;
-xlim([0 Fs/2e6]);
 
 
 %% ----------------- Plot: QAM Constellation Diagram ----------------- 
