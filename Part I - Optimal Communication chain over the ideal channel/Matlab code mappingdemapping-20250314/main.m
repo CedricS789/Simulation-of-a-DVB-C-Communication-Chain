@@ -23,18 +23,10 @@ else
     symb_tx = mapping(bits_tx, Nbs, 'pam'); 
 end 
  
-%% ----------------- Plot: QAM Constellation Diagram ----------------- 
-figure; 
-plot(real(symb_tx), imag(symb_tx), 'o'); 
-title('QAM Constellation Diagram'); 
-xlabel('In-phase'); 
-ylabel('Quadrature'); 
-grid on; 
-axis equal;
 
 %% ----------------- Step 2: Generate RRC Filter ----------------- 
-% Generate time vector for filter taps
-t = (-span/2 : 1/M : span/2) * Tsym;
+% Generate time vector for filter
+t = (-span*M/2 : 1 : span*M/2) / Fs;
 
 % Generate RRC filter coefficients
 rrc_filter = rcosdesign(rolloff, span, M, 'sqrt');
@@ -93,3 +85,12 @@ xlabel('Frequency (MHz)');
 ylabel('Power Spectral Density (dB)');
 grid on;
 xlim([-Fs/2e6 Fs/2e6]);
+
+%% ----------------- Plot: QAM Constellation Diagram ----------------- 
+figure; 
+plot(real(symb_tx), imag(symb_tx), 'o'); 
+title('QAM Constellation Diagram'); 
+xlabel('In-phase'); 
+ylabel('Quadrature'); 
+grid on; 
+axis equal;
