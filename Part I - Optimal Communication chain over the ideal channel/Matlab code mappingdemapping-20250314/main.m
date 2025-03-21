@@ -1,3 +1,6 @@
+% TODO: the built function rcosdesign was used to compute the RRC.
+% Check with the assistant id that's ok
+
 %% Clear workspace and close all figures
 clc; clear; close all;
 
@@ -13,7 +16,7 @@ Fs = M * sym_rate;                      % Sampling frequency in Hz (samples per 
 
 rolloff = 0.2;                          % Roll-off factor for RRC filter
 bandwidth = (1 + rolloff) * sym_rate;   % Bandwidth of the filter, based on roll-off and symbol rate
-span = 50;                              % Filter span in number of symbol periods
+span = 12;                              % Filter span in number of symbol periods
 taps = span * M + 1;                    % Total number of filter taps (including center tap)
 
 %% ----------------- Step 1: Random Bit Generation and Symbol Mapping -----------------
@@ -52,13 +55,10 @@ t = (-span*M/2 : 1 : span*M/2) / Fs;  % Time in seconds, centered around 0
 
 figure;
 plot(t, rrc_filter, 'b-', 'LineWidth', 1.5);  % Plot the continuous filter response
-hold on;
-plot(t, rrc_filter, 'r*');  % Plot the taps as asterisks
 title('Root Raised Cosine Filter Impulse Response');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
-legend('Continuous Response', 'Filter Taps', 'Location', 'best');
 hold off;
 
 %% ----------------- Plot: RRC Filter Frequency Response -----------------
@@ -73,7 +73,7 @@ xlabel('Frequency (MHz)');
 ylabel('Magnitude (dB)');
 grid on;
 
-%% ----------------- Plot: QAM Constellation Diagram -----------------
+%% ----------------- Plot: QAM Constellatiowan Diagram -----------------
 figure;
 plot(real(symb_tx), imag(symb_tx), 'o');    % Scatter plot of real vs. imaginary parts
 title('QAM Constellation Diagram');
