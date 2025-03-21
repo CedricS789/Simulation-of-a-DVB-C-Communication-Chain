@@ -2,7 +2,7 @@
 clc; clear; close all;
 
 %% ----------------- Parameters -----------------
-Nbt = 100;                              % Total number of bits to transmit
+Nbt = 1000;                              % Total number of bits to transmit
 Nbs = 4;                                % Number of bits per symbol (e.g., 4 for 16-QAM)
 bits_tx = randi([0 1], Nbt, 1);         % Generate random bit sequence of 0s and 1s
 
@@ -13,7 +13,7 @@ Fs = M * sym_rate;                      % Sampling frequency in Hz (samples per 
 
 rolloff = 0.2;                          % Roll-off factor for RRC filter
 bandwidth = (1 + rolloff) * sym_rate;   % Bandwidth of the filter, based on roll-off and symbol rate
-span = 30;                              % Filter span in number of symbol periods
+span = 50;                              % Filter span in number of symbol periods
 taps = span * M + 1;                    % Total number of filter taps (including center tap)
 
 %% ----------------- Step 1: Random Bit Generation and Symbol Mapping -----------------
@@ -39,6 +39,7 @@ fprintf('Total number of bits: %d\n', Nbt);
 fprintf('Bits per symbol: %d\n', Nbs);
 fprintf('Modulation type: %s\n', modulation_type);
 fprintf('Symbol rate: %.2f Msymbols/s\n', sym_rate / 1e6);
+fprintf('Symbol period duration: %.2f μs\n', Tsym * 1e6);
 fprintf('Oversampling factor: %d\n', M);
 fprintf('Sampling frequency: %.2f MHz\n', Fs / 1e6);
 fprintf('Roll-off factor: %.2f\n', rolloff);
@@ -50,11 +51,15 @@ fprintf('Bandwidth: %.2f MHz\n', bandwidth / 1e6);
 t = (-span*M/2 : 1 : span*M/2) / Fs;  % Time in seconds, centered around 0
 
 figure;
-plot(t, rrc_filter);
+plot(t, rrc_filter, 'b-', 'LineWidth', 1.5);  % Plot the continuous filter response
+hold on;
+plot(t, rrc_filter, 'r*');  % Plot the taps as asterisks
 title('Root Raised Cosine Filter Impulse Response');
 xlabel('Time (s)');
 ylabel('Amplitude');
 grid on;
+legend('Continuous Response', 'Filter Taps', 'Location', 'best');
+hold off;
 
 %% ----------------- Plot: RRC Filter Frequency Response -----------------
 N = 1024;                               % Number of FFT points for better resolution
@@ -103,4 +108,4 @@ title('Spectrum of Filtered Signal');
 xlabel('Frequency (MHz)');
 ylabel('Power Spectral Density (dB)');
 grid on;
-xlim([-Fs / (2e6) Fs / (2e6)]);        
+xlim([-Fs/2e6, Fs/2e6]);
