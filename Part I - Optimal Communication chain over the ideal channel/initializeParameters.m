@@ -54,30 +54,30 @@ function params = initializeParameters()
         % =====================================================================
         % == Print Parameters to Command Window ==
         % =====================================================================
-        fprintf('------------------------------------\n');
-        fprintf('Simulation Parameters Initialized:\n');
-        fprintf('------------------------------------\n');
-        fprintf('  Modulation:\n');
-        fprintf('    Bits per Symbol (Nbps):    %d\n', params.modulation.Nbps);
-        fprintf('    Modulation Order (M):      %d\n', params.modulation.ModulationOrder);
-        fprintf('    Modulation Type:           %s\n', upper(params.modulation.ModulationType));
-        fprintf('  Timing & Rate:\n');
-        fprintf('    Symbol Rate (Rs):          %.2e Symbols/sec\n', params.timing.SymbolRate);
-        fprintf('    Symbol Period (Ts):        %.2e sec\n', params.timing.SymbolPeriod);
-        fprintf('    Total Data Bits:           %d\n', params.timing.NumBits);
-        fprintf('    Bit Rate (Rb):             %.2e bps\n', params.timing.BitRate);
-        fprintf('    Total Signal Duration:     %.2e sec\n', params.timing.StreamDuration);
-        fprintf('  Sampling:\n');
-        fprintf('    Oversampling Factor (OSF): %d\n', params.sampling.OversamplingFactor);
-        fprintf('    Sampling Frequency (Fs):   %.2e Hz\n', params.sampling.SamplingFrequency);
-        fprintf('    Sample Period (Tsamp):     %.2e sec\n', params.sampling.SamplePeriod);
-        fprintf('  Filtering (RRC):\n');
-        fprintf('    Roll-off Factor (Beta):    %.2f\n', params.filter.RolloffFactor);
-        fprintf('    Number of Taps:            %d\n', params.filter.NumFilterTaps);
-        fprintf('    Signal Bandwidth (approx): %.2e Hz\n', params.filter.SignalBandwidth);
-        fprintf('  BER Simulation:\n');
-        fprintf('    Eb/N0 Range:               %.1f dB to %.1f dB\n', ...
+        fprintf('------------------------------------');
+        fprintf('\nSimulation Parameters Initialized:');
+        fprintf('\n------------------------------------');
+        fprintf('\n  Modulation:');
+        fprintf('\n    Bits per Symbol (Nbps):    %d', params.modulation.Nbps);
+        fprintf('\n    Modulation Order (M):      %d', params.modulation.ModulationOrder);
+        fprintf('\n    Modulation Type:           %s', upper(params.modulation.ModulationType));
+        fprintf('\n  Timing & Rate:');
+        fprintf('\n    Symbol Rate (Rs):          %.2e Symbols/sec', params.timing.SymbolRate);
+        fprintf('\n    Symbol Period (Ts):        %.2e sec', params.timing.SymbolPeriod);
+        fprintf('\n    Total Data Bits:           %d', params.timing.NumBits);
+        fprintf('\n    Bit Rate (Rb):             %.2e bps', params.timing.BitRate);
+        fprintf('\n    Total Signal Duration:     %.2e sec', params.timing.StreamDuration);
+        fprintf('\n  Sampling:');
+        fprintf('\n    Oversampling Factor (OSF): %d', params.sampling.OversamplingFactor);
+        fprintf('\n    Sampling Frequency (Fs):   %.2e Hz', params.sampling.SamplingFrequency);
+        fprintf('\n    Sample Period (Tsamp):     %.2e sec', params.sampling.SamplePeriod);
+        fprintf('\n  Filtering (RRC):');
+        fprintf('\n    Roll-off Factor (Beta):    %.2f', params.filter.RolloffFactor);
+        fprintf('\n    Number of Taps:            %d', params.filter.NumFilterTaps);
+        fprintf('\n    Signal Bandwidth (approx): %.2e Hz', params.filter.SignalBandwidth);
+        fprintf('\n  BER Simulation:');
+        fprintf('\n    Eb/N0 Range:               %.1f dB to %.1f dB', ...
                 params.simulation.EbN0_min_dB, params.simulation.EbN0_max_dB);
-        fprintf('    Eb/N0 Step:                %.1f dB\n', params.simulation.EbN0_step_dB);
-        fprintf('    Iterations per Eb/N0:      %d\n', params.simulation.iterations_per_EbN0);
+        fprintf('\n    Eb/N0 Step:                %.1f dB', params.simulation.EbN0_step_dB);
+        fprintf('\n    Iterations per Eb/N0:      %d', params.simulation.iterations_per_EbN0);
 end

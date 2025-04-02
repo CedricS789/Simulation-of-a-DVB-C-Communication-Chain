@@ -102,8 +102,10 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
 
     % --- Link Axes ---
     if linkConstAxes
-        if ischar(linkConstAxes) || isstring(linkConstAxes) || linkConstAxes
-            linkaxes([ax_tx, ax_rx], linkConstAxes); % Link specified axes ('x', 'y', or 'xy'), or both if true
+        if ischar(linkConstAxes) || isstring(linkConstAxes)
+             linkaxes([ax_tx, ax_rx], linkConstAxes); % Link specified axes ('x', 'y', or 'xy')
+        elseif linkConstAxes
+             linkaxes([ax_tx, ax_rx], 'xy'); % Link both x and y axes
         end
     end
 

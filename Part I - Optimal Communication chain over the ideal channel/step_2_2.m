@@ -8,7 +8,10 @@
 clear; close all; clc;
 
 %% ========================== Simulation Parameters ============================
-fprintf('Initializing Simulation Parameters...\n');
+fprintf('\n\n------------------------------------');
+fprintf('\nInitializing Simulation Parameters...');
+fprintf('\n------------------------------------');
+
 params = initializeParameters(); % Initialize parameters
 
 % --- Extract parameters ---
@@ -27,15 +30,15 @@ BitRate     = params.timing.BitRate;
 iterations_for_accuracy = params.simulation.iterations_per_EbN0; % Number of runs to average BER
 EbN0dB                  = 10 ; % The single Eb/N0 value (dB) for this test
 
-fprintf('------------------------------------\n');
+fprintf('\n\n------------------------------------');
 fprintf('Accurate BER Test Setup:\n');
+fprintf('\n------------------------------------');
 fprintf('  Modulation: %d-%s, Eb/N0 = %.1f dB\n', ModOrder, upper(ModType), EbN0dB);
 fprintf('  %d Bits per iteration, %d iterations\n', NumBits, iterations_for_accuracy);
 fprintf('  Total bits simulated = %d\n', NumBits * iterations_for_accuracy);
-fprintf('------------------------------------\n');
 
 %% ======================== Transmitter Chain (Executed Once) =====================
-fprintf('\nExecuting Transmitter Chain (Once)...\n');
+fprintf('\nExecuting Transmitter Chain ...\n');
 
 % -------- 1. Generate Source Data Bits --------
 bit_tx = randi([0, 1], 1, NumBits);
@@ -70,7 +73,8 @@ for iter = 1:iterations_for_accuracy
     % --- 2. Receiver Chain ---
     signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps); % Matched Filter
     symb_rx = downSampler(signal_rx_filtered, OSF).'; % Downsample
-    bit_rx = demapping(symb_rx, Nbps, ModType)'; % Demap
+    bit_rx = demapping(symb_rx, Nbps, ModType); % Demap
+    bit_rx = bit_rx(:).'; % Reshape to a vector
 
     % --- 3. Calculate and Accumulate Errors ---
     num_errors_iter = sum(bit_tx ~= bit_rx);
@@ -101,7 +105,9 @@ fprintf('   Average BER:        %.3e\n', ber_avg);
 
 %% ====================== Generate Plots (Based on Last Iteration) =======================
 % Plots show a snapshot from the *last* run. The BER value above is the average.
+fprintf('\n\n------------------------------------\n');
 fprintf('\nGenerating Plots (showing results from the LAST iteration)...\n');
+fprintf('Plotting complete.\n');
 
 bits_to_plot = min(params.timing.NumBits, 100 * params.modulation.Nbps); % Example value
 
@@ -114,5 +120,6 @@ plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
 % --- Plot Power Spectral Density (PSD from last iteration) ---
 plotPSD_Tx_Rx(signal_tx, signal_rx_filtered, Fs);
 
-fprintf('\nPlotting complete. Simulation finished.\n');
+fprintf('\n\n------------------------------------\n');
+fprintf('Plotting complete.\n');
 fprintf('------------------------------------\n');
