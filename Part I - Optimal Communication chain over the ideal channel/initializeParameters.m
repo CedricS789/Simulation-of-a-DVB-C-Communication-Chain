@@ -47,7 +47,7 @@ function params = initializeParameters()
         % == BER Curve Simulation Parameters ==
         % =====================================================================
         params.simulation.EbN0_min_dB = 0;                      % Start Eb/N0 [dB]
-        params.simulation.EbN0_max_dB = 15;                     % End Eb/N0 [dB]
+        params.simulation.EbN0_max_dB = 100;                     % End Eb/N0 [dB]
         params.simulation.EbN0_step_dB = 1;                     % Step size Eb/N0 [dB]
         params.simulation.iterations_per_EbN0 = 50;             % Averaging iterations per point
 
@@ -74,7 +74,7 @@ function params = initializeParameters()
         fprintf('\n  Filtering (RRC):');
         fprintf('\n    Roll-off Factor (Beta):    %.2f', params.filter.RolloffFactor);
         fprintf('\n    Number of Taps:            %d', params.filter.NumFilterTaps);
-        fprintf('\n    Signal Bandwidth (approx): %.2e Hz', params.filter.SignalBandwidth);
+        fprintf('\n    Signal Bandwidth:          %.2e Hz', params.filter.SignalBandwidth);
         fprintf('\n  BER Simulation:');
         fprintf('\n    Eb/N0 Range:               %.1f dB to %.1f dB', ...
                 params.simulation.EbN0_min_dB, params.simulation.EbN0_max_dB);
