@@ -85,7 +85,7 @@ fprintf('\n\n------------------------------------\n');
 fprintf('Simulation Complete (Ideal Channel).\n');
 fprintf('------------------------------------\n');
 fprintf('  Number of bit errors: %d\n', numErrors);
-fprintf('  Bit Error Rate (BER): %.3e\n', ber_ideal);
+fprintf('  Bit Error Rate (BER): %.3e\n', ber_ideal_channel);
 
 
 
