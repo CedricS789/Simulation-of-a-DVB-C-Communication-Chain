@@ -33,7 +33,7 @@ end
 
 %% ----------------- Step 2: Generate and Apply RRC Filter -----------------
 symbols_up = upsample(symb_tx, M);                  % Upsampled symbol sequence
-rrc_filter = rcosdesign(rolloff, span, M, 'normal');  % RRC filter with square-root response
+rrc_filter = rcosdesign(rolloff, span, M, 'sqrt');  % RRC filter with square-root response
 tx_filtered = filter(rrc_filter, 1, symbols_up);    % Filtered transmit signal
 
 
