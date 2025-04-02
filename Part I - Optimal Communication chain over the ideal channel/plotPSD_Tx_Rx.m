@@ -34,7 +34,6 @@ function hFig = plotPSD_Tx_Rx(signal_tx, signal_rx, SamplingFrequency)
      pwelchMinNfft       = 1024;         % Minimum FFT points
      pwelchSpectrumType  = 'psd';        % Estimate type ('psd' or 'power')
      pwelchRange         = 'centered';   % Frequency range ('centered' or 'onesided')
-     % =====================================================================
 
      % --- Figure and Axes Creation ---
      hFig = figure('Name', figureName, 'NumberTitle', figureNumberTitle);

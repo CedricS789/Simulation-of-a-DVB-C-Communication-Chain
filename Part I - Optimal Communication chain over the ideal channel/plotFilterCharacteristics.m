@@ -111,7 +111,6 @@ function hFig = plotFilterCharacteristics(h_rrc, Beta, Fs, OSF)
     symbol_sample_indices = rc_center_index + symbol_indices_offset * OSF;
     valid_indices_mask = (symbol_sample_indices >= 1) & (symbol_sample_indices <= NumRCTaps);
     symbol_sample_indices = symbol_sample_indices(valid_indices_mask);
-    symbol_indices_offset = symbol_indices_offset(valid_indices_mask);
     symbol_times_norm = time_axis_rc_norm(symbol_sample_indices);
     symbol_values = h_rc(symbol_sample_indices);
     % Plot stems at symbol sampling instants

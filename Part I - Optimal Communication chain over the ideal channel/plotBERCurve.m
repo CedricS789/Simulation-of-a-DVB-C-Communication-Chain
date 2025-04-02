@@ -14,7 +14,7 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
     %       hFig           - Handle to the generated figure object.
 
         % =====================================================================
-        % == Plotting Parameters (Internal Configuration) ==
+        % == Plotting Parameters ==
         % =====================================================================
         figureName          = 'BER Curve';
         figureNumberTitle   = 'off';

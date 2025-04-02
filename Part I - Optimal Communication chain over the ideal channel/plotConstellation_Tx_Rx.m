@@ -11,12 +11,12 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
     %       hFig            - Handle to the created figure object.
 
     % =====================================================================
-    % == Plotting Parameters (Internal Configuration) ==
+    % == Plotting Parameters ==
     % =====================================================================
     txColor = [0, 0.4470, 0.7410];      % Blue
     rxColor = [0.8500, 0.3250, 0.0980]; % Red
     lineWidth = 1.5;
-    baseMarkerSize = 6;
+    baseMarkerSize = 60;
     txMarkerStyle       = 'o';
     rxMarkerStyle       = 'x';
     markerSizeMultiplier= 1;
@@ -35,7 +35,6 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
     enableGridMinor     = true;
     useAxisEqual        = true;         % Ensure 1:1 aspect ratio
     linkConstAxes       = true;         % Link axes of subplots ('xy', 'x', 'y', or false/true for 'xy')
-    % =====================================================================
 
     % --- Figure and Axes Creation ---
     hFig = figure('Name', figureName, 'NumberTitle', figureNumberTitle);
@@ -103,10 +102,8 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
 
     % --- Link Axes ---
     if linkConstAxes
-        if ischar(linkConstAxes) || isstring(linkConstAxes)
-             linkaxes([ax_tx, ax_rx], linkConstAxes); % Link specified axes ('x', 'y', or 'xy')
-        elseif linkConstAxes
-             linkaxes([ax_tx, ax_rx], 'xy'); % Link both x and y axes
+        if ischar(linkConstAxes) || isstring(linkConstAxes) || linkConstAxes
+            linkaxes([ax_tx, ax_rx], linkConstAxes); % Link specified axes ('x', 'y', or 'xy'), or both if true
         end
     end
 

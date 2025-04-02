@@ -10,7 +10,7 @@ function hFig = plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot)
     %       hFig            - Handle to the created figure object.
 
     % =====================================================================
-    % == Plotting Parameters (Internal Configuration) ==
+    % == Plotting Parameters ==
     % =====================================================================
     txColor = [0, 0.4470, 0.7410];      % Blue
     rxColor = [0.8500, 0.3250, 0.0980]; % Red
@@ -26,7 +26,6 @@ function hFig = plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot)
     yAxisLimits         = [-0.1, 1.1];  % Fixed limits for 0/1 values
     yAxisTicks          = [0, 1];       % Explicit ticks at 0 and 1
     linkXAxes           = true;         % Link x-axes of subplots
-    % =====================================================================
 
     % --- Input Validation ---
     actual_len_tx = length(bit_tx);
