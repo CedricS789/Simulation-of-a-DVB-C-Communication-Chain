@@ -1,4 +1,4 @@
-function params = initializeParameters()
+function params = coreParameters()
     %INITIALIZEPARAMETERS Creates struct with all simulation parameters.
     %   Sets up modulation, timing, filter, sampling, and simulation settings.
     %   Calculates derived parameters and prints summary.
@@ -49,7 +49,7 @@ function params = initializeParameters()
         params.simulation.EbN0_min_dB = 0;                      % Start Eb/N0 [dB]
         params.simulation.EbN0_max_dB = 100;                     % End Eb/N0 [dB]
         params.simulation.EbN0_step_dB = 1;                     % Step size Eb/N0 [dB]
-        params.simulation.iterations_per_EbN0 = 50;             % Averaging iterations per point
+        params.simulation.iterations_per_EbN0 = 5;             % Averaging iterations per point
 
         % =====================================================================
         % == Print Parameters to Command Window ==
