@@ -34,9 +34,9 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
         theoryLineStyle     = '-';
         theoryMarker        = 'none';
         theoryColor         = 'r';
-        theoryLineWidth     = 1.5;
+        theoryLineWidth     = 1;
         theoryDisplayNameFormat = 'Theoretical %s';
-        nPointsTheory       = 200;                      % Number of points for smooth  curve
+        nPointsTheory       = 300;                      % Number of points for smooth  curve
 
         legendLocation      = 'southwest';
         gridVisible         = 'on';
