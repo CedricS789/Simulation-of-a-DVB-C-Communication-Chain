@@ -25,7 +25,7 @@ function params = initParameters(Nbps_input)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 1e6;                           % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 1e5;                           % Total data bits (multiple of Nbps)
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
         params.timing.BitRate = params.timing.SymbolRate * params.modulation.Nbps;      % Rb [bps]

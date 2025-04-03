@@ -1,4 +1,4 @@
-%%   =================== Step 2 v1 - Simulation over an Ideal Channel ===================
+%%   =================== Step 2 v1 - Simulation over an Ideal Channel (No Noise) ===================
 %
 %       Purpose: This script simulates a DVB-C communication chain (transmitter to receiver) 
 %       over an ideal channel without noise. It implements symbol mapping, 
@@ -73,13 +73,13 @@ symb_rx = downSampler(signal_rx, OSF).'; % Transpose back to row vector
 fprintf('\n  Downsampled filtered signal by %d to recover symbols.', OSF);
 
 % -------- 3. Symbol Demapping --------
-bit_rx = demapping(symb_rx, Nbps, ModType); % Transpose back to row vector
+bit_rx = demapping_v2(symb_rx, Nbps, ModType); % Transpose back to row vector
 bit_rx = bit_rx(:).'; % Reshape to a vector
 fprintf('\n  Demapped received symbols back to bits.');
 
 
 %% ========================================== Plots ==========================================
-bits_to_plot = min(params.timing.NumBits, 100 * params.modulation.Nbps); % Example value
+bits_to_plot = min(params.timing.NumBits, 100 * params.modulation.Nbps);    % If NumBits is too large, plot only 100*Nbps bits
 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);

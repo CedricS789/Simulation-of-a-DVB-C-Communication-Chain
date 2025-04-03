@@ -1,4 +1,4 @@
-%%   =================== Step 2 v2 - Simulation with Fixed Noise Level ===================
+%%   =================== Step 2 v2 - Simulation with Fixed Noise Level (Noisy Channel) ===================
 %
 %       Purpose: This script extends the communication chain simulation to include an AWGN 
 %       channel with a fixed Eb/N0. It evaluates the bit 
@@ -21,7 +21,7 @@ addpath('functions');
 
 
 %% ========================== Initialization of Simulation Parameters ============================
-Nbps = 4;
+Nbps = 1;
 params = initParameters(Nbps); % Initialize parameters
 
 % --- Extract parameters ---
@@ -38,7 +38,7 @@ displayParameters(params);
 
 % --- Define Fixed Eb/N0 and Averaging Iterations ---
 iterations = params.simulation.iterations_per_EbN0;    % Number of runs to average BER to have a good estimate of the BER
-EbN0dB     = 0 ;                                       % The single Eb/N0 value (dB) for this test - ADJUST AS NEEDED
+EbN0dB     = 30 ;                                       % The single Eb/N0 value (dB) for this test - ADJUST AS NEEDED
 
 % ------------------------- Accurate BER Test Setup -------------------------
 fprintf('\n\n========================================');
@@ -89,9 +89,9 @@ for iter = 1:iterations
     signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add AWGN noise
 
     % --- Receiver Chain ---
-    signal_rx_filtered  = applyFilter(signal_tx_noisy, h_rrc, NumTaps); % Matched filter
-    symb_rx             = downSampler(signal_rx_filtered, OSF).';       % Downsample
-    bit_rx              = demapping(symb_rx, Nbps, ModType);            % Demap symbols
+    signal_rx  = applyFilter(signal_tx_noisy, h_rrc, NumTaps); % Matched filter
+    symb_rx             = downSampler(signal_rx, OSF).';       % Downsample
+    bit_rx              = demapping_v2(symb_rx, Nbps, ModType);         % Demap symbols
     bit_rx              = bit_rx(:).';                                  % Reshape to a vector
 
     % --- Calculate and Accumulate Errors ---
@@ -124,11 +124,12 @@ fprintf('\n========================================\n');
 fprintf('\n\n========================================');
 fprintf('\n         Generate Plots               ');
 fprintf('\n========================================\n');
-bits_to_plot = min(params.timing.NumBits, 100 * params.modulation.Nbps);    % Example bit count for plotting
-
+bits_to_plot = min(params.timing.NumBits, 100 * Nbps);                      % If NumBits is too large, plot only 100*Nbps bits
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);               % Plot Constellation
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);                          % Plot Bitstreams
-plotPSD_Tx_Rx(signal_tx, signal_rx_filtered, Fs);                           % Plot PSD
+plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);                                    % Plot PSD
+plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);                            % Plot Filter Characteristics
+plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);                     % Plot Baseband Frequency Response 
 
 fprintf('\n========================================'); 
 fprintf('\n           Plotting Complete            '); 

@@ -107,7 +107,7 @@ for idx_EbN0 = 1:num_EbN0_points
         % -------- 2. Receiver Chain --------
         signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
         symb_rx = downSampler(signal_rx_filtered, OSF).';                   % Downsample to symbol rate, transpose back
-        bit_rx = demapping(symb_rx, Nbps, ModType);                         % Demap received symbols to bits
+        bit_rx = demapping_v2(symb_rx, Nbps, ModType);                         % Demap received symbols to bits
         bit_rx = bit_rx(:).';                                               % Ensure bit_rx is a row vector
 
         % -------- 3. Calculate Errors for this iteration --------

@@ -24,21 +24,19 @@
 clear; close all; clc;
 addpath('functions'); % Ensure your functions folder is in the path
 
-
 %% ========================== Simulation Setup ============================
-nbps_to_simulate = [2 4 6 8 10]; % Nbps values to simulate (e.g., 1 for BPSK, 2 for QPSK, etc.)
+% Define the Nbps values to simulate 
+nbps_to_simulate = [1];
 fprintf('=============================================================================================================================================\n');
 fprintf('Starting Multi-Nbps BER Simulation\n');
 fprintf('Nbps values to simulate: %s\n', mat2str(nbps_to_simulate));
 fprintf('=============================================================================================================================================\n\n');
 
 
-
 %% ========================== Data Storage ============================
 num_simulations = length(nbps_to_simulate);
 all_ber_results = cell(1, num_simulations);      % To store BER data vectors
 all_params      = cell(1, num_simulations);      % To store the params struct for each run
-
 
 
 %% ========================== Simulation Loop ============================

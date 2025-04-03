@@ -77,7 +77,7 @@ function ber_averages_datas = generateBERData(params)
             % -------- 2. Receiver Chain --------
             signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);
             symb_rx = downSampler(signal_rx_filtered, OSF).';
-            bit_rx = demapping(symb_rx, Nbps, ModType);
+            bit_rx = demapping_v2(symb_rx, Nbps, ModType);
             bit_rx = bit_rx(:).';
 
             % -------- 3. Calculate Errors for this iteration --------
