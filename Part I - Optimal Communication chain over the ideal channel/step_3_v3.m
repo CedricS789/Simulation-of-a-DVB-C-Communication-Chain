@@ -26,7 +26,7 @@ addpath('functions'); % Ensure your functions folder is in the path
 
 %% ========================== Simulation Setup ============================
 % Define the Nbps values to simulate 
-nbps_to_simulate = [1];
+nbps_to_simulate = [1 2 3 4 5 6 7 8 9 10 11 12]; % Nbps values to simulate
 fprintf('=============================================================================================================================================\n');
 fprintf('Starting Multi-Nbps BER Simulation\n');
 fprintf('Nbps values to simulate: %s\n', mat2str(nbps_to_simulate));
@@ -51,10 +51,6 @@ for i = 1:num_simulations
     % --- Store Results ---
     all_ber_results{i}  = ber_data;       % We use cell arrays to store results because the length of the BER data may vary
     all_params{i}       = params;         % We use cell arrays to store the params struct for each run because it contains various fields
-    
-    fprintf('-----------------------------------------------\n');
-    fprintf('--- Completed Simulation for Nbps = %d ---\n', current_nbps);
-    fprintf('-----------------------------------------------\n\n');
     
 end
 

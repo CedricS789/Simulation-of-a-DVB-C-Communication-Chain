@@ -77,41 +77,38 @@ function impulseResponse = rrcFilter(Beta, SymRate, OSF, NumTaps)
 
 
     % =====================================================================
-    % == Time Vector for Plotting ==
-    % =====================================================================
-    samplePeriod = 1 / samplingFreq;
-    timeVectorSec = (-(NumTaps - 1) / 2 : (NumTaps - 1) / 2) * samplePeriod;
-
-    % =====================================================================
     % == Plotting the Filter Characteristics ==
     % =====================================================================
-    filterFig = figure;
-    set(filterFig, 'Name', sprintf('RRC Filter Characteristics (β=%.2f, Rs=%.1f MHz, OSF=%d, Taps=%d)', Beta, SymRate/1e6, OSF, NumTaps), 'NumberTitle', 'off');
+    % samplePeriod = 1 / samplingFreq;
+    % timeVectorSec = (-(NumTaps - 1) / 2 : (NumTaps - 1) / 2) * samplePeriod;
 
-    % Plot 1: Frequency Domain Magnitude Response |H_RRC(f)|
-    axFreq = subplot(1, 2, 1);
-    plot(axFreq, freqGridHz / 1e6, abs(fftshift(fft(ifftshift(impulseResponse)))), 'b-', 'LineWidth', 1.5); % Plot actual H(f) of normalized h(t)
-    hold(axFreq, 'on');
-    plot(axFreq, [f1_hz, f1_hz]/1e6, ylim(axFreq), 'r--', 'LineWidth', 1.0, 'DisplayName', 'f_1'); % Mark f1
-    plot(axFreq, [-f1_hz, -f1_hz]/1e6, ylim(axFreq), 'r--', 'LineWidth', 1.0, 'HandleVisibility', 'off');
-    plot(axFreq, [f2_hz, f2_hz]/1e6, ylim(axFreq), 'g--', 'LineWidth', 1.0, 'DisplayName', 'f_2'); % Mark f2
-    plot(axFreq, [-f2_hz, -f2_hz]/1e6, ylim(axFreq), 'g--', 'LineWidth', 1.0, 'HandleVisibility', 'off');
-    hold(axFreq, 'off');
-    grid(axFreq, 'on');
-    xlabel(axFreq, 'Frequency (MHz)');
-    ylabel(axFreq, 'Magnitude |H_{RRC}(f)|');
-    title(axFreq, 'RRC Filter Frequency Response');
-    legend(axFreq, 'show', 'Location', 'best');
-    xlim(axFreq, samplingFreq/2*[-1 1] / 1e6); % Use samplingFreq/2
-    box(axFreq, 'on');
+    % filterFig = figure;
+    % set(filterFig, 'Name', sprintf('RRC Filter Characteristics (β=%.2f, Rs=%.1f MHz, OSF=%d, Taps=%d)', Beta, SymRate/1e6, OSF, NumTaps), 'NumberTitle', 'off');
 
-    % Plot 2: Time Domain Impulse Response h_RRC(t)
-    axTime = subplot(1, 2, 2);
-    plot(axTime, timeVectorSec * 1e6, impulseResponse, 'b-', 'LineWidth', 1.5); % Use final normalized response
-    grid(axTime, 'on');
-    xlabel(axTime, 'Time (\mus)');
-    ylabel(axTime, 'Amplitude h_{RRC}(t)');
-    title(axTime, 'RRC Filter Impulse Response (Normalized)');
-    xlim(axTime, [min(timeVectorSec), max(timeVectorSec)] * 1e6);
-    box(axTime, 'on');
+    % % Plot 1: Frequency Domain Magnitude Response |H_RRC(f)|
+    % axFreq = subplot(1, 2, 1);
+    % plot(axFreq, freqGridHz / 1e6, abs(fftshift(fft(ifftshift(impulseResponse)))), 'b-', 'LineWidth', 1.5); % Plot actual H(f) of normalized h(t)
+    % hold(axFreq, 'on');
+    % plot(axFreq, [f1_hz, f1_hz]/1e6, ylim(axFreq), 'r--', 'LineWidth', 1.0, 'DisplayName', 'f_1'); % Mark f1
+    % plot(axFreq, [-f1_hz, -f1_hz]/1e6, ylim(axFreq), 'r--', 'LineWidth', 1.0, 'HandleVisibility', 'off');
+    % plot(axFreq, [f2_hz, f2_hz]/1e6, ylim(axFreq), 'g--', 'LineWidth', 1.0, 'DisplayName', 'f_2'); % Mark f2
+    % plot(axFreq, [-f2_hz, -f2_hz]/1e6, ylim(axFreq), 'g--', 'LineWidth', 1.0, 'HandleVisibility', 'off');
+    % hold(axFreq, 'off');
+    % grid(axFreq, 'on');
+    % xlabel(axFreq, 'Frequency (MHz)');
+    % ylabel(axFreq, 'Magnitude |H_{RRC}(f)|');
+    % title(axFreq, 'RRC Filter Frequency Response');
+    % legend(axFreq, 'show', 'Location', 'best');
+    % xlim(axFreq, samplingFreq/2*[-1 1] / 1e6); % Use samplingFreq/2
+    % box(axFreq, 'on');
+
+    % % Plot 2: Time Domain Impulse Response h_RRC(t)
+    % axTime = subplot(1, 2, 2);
+    % plot(axTime, timeVectorSec * 1e6, impulseResponse, 'b-', 'LineWidth', 1.5); % Use final normalized response
+    % grid(axTime, 'on');
+    % xlabel(axTime, 'Time (\mus)');
+    % ylabel(axTime, 'Amplitude h_{RRC}(t)');
+    % title(axTime, 'RRC Filter Impulse Response (Normalized)');
+    % xlim(axTime, [min(timeVectorSec), max(timeVectorSec)] * 1e6);
+    % box(axTime, 'on');
 end

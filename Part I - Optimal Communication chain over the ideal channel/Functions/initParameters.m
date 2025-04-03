@@ -53,7 +53,7 @@ function params = initParameters(Nbps_input)
         params.simulation.EbN0_min_dB = -5;                      % Start Eb/N0 [dB]
         params.simulation.EbN0_max_dB = 15;                      % End Eb/N0 [dB]
         params.simulation.EbN0_step_dB = 1;                      % Step size Eb/N0 [dB]
-        params.simulation.iterations_per_EbN0 = 1;              % Averaging iterations per point
+        params.simulation.iterations_per_EbN0 = 1;               % Averaging iterations per point
         
         EbN0_min_dB                         = params.simulation.EbN0_min_dB;                % Minimum Eb/N0 value in dB
         EbN0_max_dB                         = params.simulation.EbN0_max_dB;                % Maximum Eb/N0 value in dB

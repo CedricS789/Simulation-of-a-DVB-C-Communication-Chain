@@ -27,9 +27,9 @@ function hFig = plotMultipleBERCurves(nbps_values, ber_results_cell, params_cell
         elseif strcmpi(ModType, 'pam')                                              % if modulation type is PAM
              BER_theory = berawgn(EbN0_theory_dB, 'pam', ModOrder, 'nondiff');      % calculate theoretical BER for PAM
              if ModOrder == 2                                                       % if modulation order is 2 (BPSK), special case of PAM
-                 label_base = sprintf('BPSK/2-PAM (N_{bps}=%d)', nbps_values(i));   % label for BPSK/PAM
+                 label_base = sprintf('2-PAM/BPSK (Nbps=%d)', nbps_values(i));   % label for BPSK/PAM
              else
-                 label_base = sprintf('%d-PAM (N_{bps}=%d)', ModOrder, nbps_values(i)); % label for PAM
+                 label_base = sprintf('%d-PAM (Nbps=%d)', ModOrder, nbps_values(i)); % label for PAM
              end
         end
 
