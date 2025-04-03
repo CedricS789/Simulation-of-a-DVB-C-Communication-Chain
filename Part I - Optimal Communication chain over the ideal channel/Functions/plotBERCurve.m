@@ -1,8 +1,9 @@
-function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, OSF, Beta)
-    %   Generates a Bit Error Rate (BER) curve plot, comparing simulated BER
-    %   results against theoretical BER values for AWGN channels.
+function hFig = plotBERCurve(ber_averages_datas, params)
+    %   Generates a simplified Bit Error Rate (BER) curve plot, comparing
+    %   simulated BER results against theoretical BER values for AWGN channels.
+    %   Assumes valid, non-empty inputs for plotting.
     %
-    %   Inputs:
+    %   Inputs - params
     %       EbN0_domain_dB - Vector of Eb/N0 values (dB) for SIMULATION (x-axis).
     %       BER_simulated  - Vector of corresponding simulated BER values.
     %       ModType        - Modulation type string ('qam' or 'pam').
@@ -13,6 +14,7 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
     %   Output:
     %       hFig           - Handle to the generated figure object.
 
+        
         % =====================================================================
         % == Plotting Parameters ==
         % =====================================================================
@@ -22,7 +24,7 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
         xAxisLabel          = 'Eb/N0 (dB)';
         yAxisLabel          = 'Bit Error Rate (BER)';
 
-        % --- SIMULATION ---
+        % --- SIMULATION STYLING ---
         simLineStyle        = 'none';
         simMarker           = 'o';
         simColor            = 'b';
@@ -30,67 +32,66 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
         simMarkerSize       = 6;
         simDisplayName      = 'Simulated';
 
-        % --- THEORY ---
+        % --- THEORY STYLING ---
         theoryLineStyle     = '-';
         theoryMarker        = 'none';
         theoryColor         = 'r';
         theoryLineWidth     = 1;
         theoryDisplayNameFormat = 'Theoretical %s';
-        nPointsTheory       = 300;                      % Number of points for smooth  curve
+        nPointsTheory       = 300;                      % Number of points for smooth curve
 
         legendLocation      = 'southwest';
         gridVisible         = 'on';
         yAxisMinBERFloor    = 1e-4;                     % Reasonable floor for BER plots
+        
+        % =====================================================================
+        % == Input Parameters ==
+        % =====================================================================
+        EbN0_domain_dB = params.simulation.EbN0_domain_dB;
+        ModType        = params.modulation.ModulationType;
+        ModOrder       = params.modulation.ModulationOrder;
+        OSF            = params.sampling.OversamplingFactor;
+        Beta           = params.filter.RolloffFactor;
 
         % =====================================================================
         % == Theoretical BER Calculation for SMOOTH CURVE ==
         % =====================================================================
-        % Create a denser Eb/N0 vector just for the theoretical plot
-        % Ensure EbN0_domain_dB is not empty and has at least two points for linspace
+        % Create a denser Eb/N0 vector for the theoretical plot
+        % Assumes EbN0_domain_dB has at least two points
         EbN0_theory_dB = linspace(min(EbN0_domain_dB), max(EbN0_domain_dB), nPointsTheory);
 
-        % Calculate theoretical BER over the DENSE vector if possible
-        if ~isempty(EbN0_theory_dB)
-            if strcmpi(ModType, 'qam')
-                BER_theoretical_smooth = berawgn(EbN0_theory_dB, 'qam', ModOrder, 'nondiff');
-                theory_label_base = sprintf('%d-QAM', ModOrder);
-            elseif strcmpi(ModType, 'pam')
-                 BER_theoretical_smooth = berawgn(EbN0_theory_dB, 'pam', ModOrder, 'nondiff');
-                 if ModOrder == 2 % Special label for BPSK
-                    theory_label_base = 'BPSK (2-PAM)';
-                 else
-                    theory_label_base = sprintf('%d-PAM', ModOrder);
-                 end
-            else
-                warning('plotBERCurve: Unrecognized ModType "%s". Theoretical curve may be incorrect.', ModType);
-                BER_theoretical_smooth = nan(size(EbN0_theory_dB)); % Use the dense vector size
-                theory_label_base = 'Unknown';
-            end
-            theoryDisplayName = sprintf(theoryDisplayNameFormat, theory_label_base);
-        else
-            % Handle case where theoretical curve can't be generated
-            BER_theoretical_smooth = [];
-            theoryDisplayName = 'Theoretical (N/A)';
+        % Calculate theoretical BER over the DENSE vector
+        % Assumes ModType is 'qam' or 'pam'
+        if strcmpi(ModType, 'qam')
+            BER_theoretical_smooth = berawgn(EbN0_theory_dB, 'qam', ModOrder, 'nondiff');
+            theory_label_base = sprintf('%d-QAM', ModOrder);
+        elseif strcmpi(ModType, 'pam')
+             BER_theoretical_smooth = berawgn(EbN0_theory_dB, 'pam', ModOrder, 'nondiff');
+             if ModOrder == 2 % Special label for BPSK
+                theory_label_base = 'BPSK (2-PAM)';
+             else
+                theory_label_base = sprintf('%d-PAM', ModOrder);
+             end
         end
+        theoryDisplayName = sprintf(theoryDisplayNameFormat, theory_label_base);
 
         % =====================================================================
         % == Plotting ==
         % =====================================================================
         hFig = figure('Name', figureName, 'NumberTitle', figureNumberTitle);
 
-        % Plot Theoretical Data (Smooth Line Only - using dense EbN0) if available
-        if ~isempty(BER_theoretical_smooth)
-            semilogy(EbN0_theory_dB, BER_theoretical_smooth,... % Use dense vectors
-                     'LineStyle', theoryLineStyle,...
-                     'Marker', theoryMarker,...
-                     'Color', theoryColor,...
-                     'LineWidth', theoryLineWidth,...
-                     'DisplayName', theoryDisplayName);
-        end
+        % Plot Theoretical Data
+        semilogy(EbN0_theory_dB, BER_theoretical_smooth,... % Use dense vectors
+                 'LineStyle', theoryLineStyle,...
+                 'Marker', theoryMarker,...
+                 'Color', theoryColor,...
+                 'LineWidth', theoryLineWidth,...
+                 'DisplayName', theoryDisplayName);
+
         hold on;
-        
-        % Plot Simulated Data (Dots Only - using original sparse EbN0)
-        semilogy(EbN0_domain_dB, BER_simulated,...
+
+        % Plot Simulated Data
+        semilogy(EbN0_domain_dB, ber_averages_datas,...
                  'LineStyle', simLineStyle,...
                  'Marker', simMarker,...
                  'Color', simColor,...
@@ -109,24 +110,19 @@ function hFig = plotBERCurve(EbN0_domain_dB, BER_simulated, ModType, ModOrder, O
         legend('show', 'Location', legendLocation);
 
         % Adjust y-axis limits based on SIMULATED data and floor
-        valid_ber_sim = BER_simulated(BER_simulated > 0 & ~isnan(BER_simulated));
+        valid_ber_sim = ber_averages_datas(ber_averages_datas > 0 & ~isnan(ber_averages_datas));
         if isempty(valid_ber_sim)
-             min_ber_plot = yAxisMinBERFloor; % Default if no valid points
+             min_ber_plot = yAxisMinBERFloor; % Default if no valid simulated points > 0
         else
              min_ber_plot = min(valid_ber_sim);
         end
-
-        if isempty(min_ber_plot) || min_ber_plot <= 0 % Check against zero or less
-            plot_lower_limit = yAxisMinBERFloor;
-        else
-             % Set lower limit slightly below min simulated BER, but not below floor.
-            plot_lower_limit = max(min_ber_plot / 10, yAxisMinBERFloor);
-        end
+        % Set lower limit slightly below min simulated BER, but not below floor.
+        plot_lower_limit = max(min_ber_plot / 10, yAxisMinBERFloor);
         ylim([plot_lower_limit 1]); % Upper limit often 1 for BER
 
         % Set x-axis limits based on the original simulation Eb/N0 range
-        if ~isempty(EbN0_domain_dB)
-           xlim([min(EbN0_domain_dB) max(EbN0_domain_dB)]);
-        end
+        % Assumes EbN0_domain_dB is not empty
+        xlim([min(EbN0_domain_dB) max(EbN0_domain_dB)]);
+
         hold off;
 end

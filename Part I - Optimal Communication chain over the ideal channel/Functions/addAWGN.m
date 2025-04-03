@@ -40,6 +40,6 @@ function signal_out = addAWGN(signal_in, Eb, EbN0dB, OSF, SymRate)
     noise = noise_real + 1i * noise_imag;
 
     % --- Add Noise ---
-    signal_out = signal_in + noise;                         % Add generated noise to the input signal
+    signal_out = signal_in + noise;  % Add generated noise to the input signal
 
 end
