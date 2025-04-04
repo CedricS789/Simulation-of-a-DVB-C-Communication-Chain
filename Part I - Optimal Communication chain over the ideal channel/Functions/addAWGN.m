@@ -14,6 +14,8 @@ function signal_out = addAWGN(signal_in, Eb, EbN0dB, OSF, SymRate)
     %       signal_out  - Output signal vector (signal_in + complex noise).
 
     % --- Calculate Noise Parameters based on provided Eb ---
+
+    
     EbN0_linear = 10^(EbN0dB / 10);                         % Convert dB to linear SNR
 
     % N0 is the one-sided Power Spectral Density (PSD) of the noise in W/Hz.

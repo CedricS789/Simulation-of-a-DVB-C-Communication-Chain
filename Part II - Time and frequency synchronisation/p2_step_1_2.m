@@ -1,7 +1,7 @@
-%%   =================== Step 1_2 - Assessing the effects of CFO and Plotting BER Curve ===================
+%% =================== Step 1_2 - Assessing the effects of CFO and Plotting BER Curve ===================
 %
 %
-%   =======================================================================================
+% =======================================================================================
 
 clear; close all; clc;
 addpath('../Part I - Optimal Communication chain over the ideal channel/functions');

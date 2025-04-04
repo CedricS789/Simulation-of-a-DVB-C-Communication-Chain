@@ -1,5 +1,5 @@
 function signal_out = applyFilter(signal_in, h_filter, NumFilterTaps)
-    %APPLYFILTER Applies an FIR filter using convolution and compensates for delay.
+    %   APPLYFILTER Applies an FIR filter using convolution and compensates for delay.
     %   Uses 'full' convolution and extracts the center part matching input length.
     %   Assumes h_filter is (approximately) linear phase.
     %
@@ -10,6 +10,7 @@ function signal_out = applyFilter(signal_in, h_filter, NumFilterTaps)
     %
     %   Output:
     %       signal_out     - Filtered output signal (same length as input).
+    
 
         % Perform 'full' convolution
         signal_filtered_full = conv(signal_in, h_filter, 'full');

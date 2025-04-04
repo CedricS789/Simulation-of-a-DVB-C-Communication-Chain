@@ -8,8 +8,8 @@ function [symb_tx] = mapping(bit_tx,Nbps,modulation)
 % OUTPUTS:
 % - symb_tx : vector of ouput symbols (variance 1)
 
+        
 Nsymb = length(bit_tx)/Nbps; % Number of symbols
-
 bit_tx2 = reshape(bit_tx,Nbps,Nsymb)';
 
 switch modulation
