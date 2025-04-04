@@ -18,10 +18,10 @@ Nbps    = 4;
 params  = initParameters(Nbps);
 NumBits = params.timing.NumBits;
 ModType = params.modulation.ModulationType;
-ModOrder = params.modulation.ModulationOrder;
+ModOrder= params.modulation.ModulationOrder;
 OSF     = params.sampling.OversamplingFactor;
 SymRate = params.timing.SymbolRate;
-BitRate     = params.timing.BitRate;
+BitRate = params.timing.BitRate;
 Fs      = params.sampling.SamplingFrequency;
 Ts      = params.sampling.SamplePeriod;
 Beta    = params.filter.RolloffFactor;
@@ -30,9 +30,9 @@ iterations = params.simulation.iterations_per_EbN0;
 displayParameters(params);
 
 % ---- CFO Parameters ----
-delta_cfo_hz    = 300;                                      % Frequency offset in Hz
-delta_omega     = 2 * pi * delta_cfo_hz;                    % Frequency offset in rad/s
-phi_0           = 0;                                        % Phase offset in rad
+delta_cfo_hz    = 300;                       % Frequency offset in Hz
+delta_omega     = 2 * pi * delta_cfo_hz;     % Frequency offset in rad/s
+phi_0           = 0;                         % Phase offset in rad
 
 
 %% ========================================== Communication Chain ==========================================
@@ -46,10 +46,10 @@ signalPower_tx  = mean(abs(signal_tx).^2);
 Eb              = signalPower_tx / BitRate;
 
 % --- Introduce CFO and phase offset ---
-num_samples_tx  = length(signal_tx);                        % Number of samples in the transmitted signal
-time_vector     = (0 : num_samples_tx - 1) * Ts;            % The TA insisted on this
-offset_signal   = exp(1j * delta_omega * time_vector + phi_0); % Create the offset signal
-signal_tx_cfo   = signal_tx .* offset_signal;                      % Apply CFO to the transmitted signal
+num_samples_tx  = length(signal_tx);                            % Number of samples in the transmitted signal
+time_vector     = (0 : num_samples_tx - 1).' * Ts;                % The TA insisted on this
+offset_signal   = exp(1j * delta_omega * time_vector + phi_0);  % Create the offset signal
+signal_tx_cfo   = signal_tx .* offset_signal;                   % Apply CFO to the transmitted signal
 
 % -- Introduce Noise --
 EbN0dB     = 50 ;

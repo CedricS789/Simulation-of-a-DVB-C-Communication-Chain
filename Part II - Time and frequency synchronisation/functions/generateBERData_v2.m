@@ -1,4 +1,4 @@
-function ber_averages_datas = generateBERDataOffset(params, delta_cfo_hz, phase_offset)
+function ber_averages_datas = generateBERData_v2(params, delta_cfo_hz, phase_offset)
 
     % --- Extract parameters needed ---
     Nbps        = params.modulation.Nbps;

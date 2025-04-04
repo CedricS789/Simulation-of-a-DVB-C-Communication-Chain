@@ -20,7 +20,7 @@ OSF         = params.sampling.OversamplingFactor;                   % Oversampli
 SymRate     = params.timing.SymbolRate;                             % Symbol rate (symbols/sec)
 BitRate     = params.timing.BitRate;                                % Bit rate (bits/sec)
 Fs          = params.sampling.SamplingFrequency;                    % Sampling frequency (samples/sec)
-Ts          = params.sampling.SamplePeriod;                          % Sample period (seconds/sample)
+Ts          = params.sampling.SamplePeriod;                         % Sample period (seconds/sample)
 Beta        = params.filter.RolloffFactor;                          % RRC filter roll-off factor
 NumTaps     = params.filter.NumFilterTaps;                          % Number of RRC filter taps
 
@@ -39,7 +39,7 @@ phase_offset    = 0;                                      % Phase offset in rad
 delta_omega_offset = 2 * pi * delta_cfo_hz;               % Frequency offset in rad/s
 
 % --- Pre-allocate results array ---
-ber_data = zeros(1, num_EbN0_points);                               % Stores simulated BER for each Eb/N0 point
+ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
 
 fprintf('\n\n========================================');
 fprintf('\n    BER Curve Simulation Setup         ');
@@ -98,7 +98,7 @@ for idx_EbN0 = 1:num_EbN0_points
         % -------- 2. Receiver Chain --------
         signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
         symb_rx = downSampler(signal_rx_filtered, OSF).';                   % Downsample to symbol rate, transpose back
-        bit_rx = demapping_v2(symb_rx, Nbps, ModType);                         % Demap received symbols to bits
+        bit_rx = demapping_v2(symb_rx, Nbps, ModType);                      % Demap received symbols to bits
         bit_rx = bit_rx(:).';                                               % Ensure bit_rx is a row vector
 
         % -------- 3. Calculate Errors for this iteration --------
@@ -111,7 +111,7 @@ for idx_EbN0 = 1:num_EbN0_points
     end
 
     % -------- Calculate Average BER for this EbN0 point --------
-    ber_data(idx_EbN0) = total_bit_errors_point / total_bits_sim_point; % Calculate and store the average BER
+    ber_data(idx_EbN0) = total_bit_errors_point / total_bits_sim_point;     % Calculate and store the average BER
 
     % Print results for the each Eb/N0 point
     fprintf('\n  Eb/N0 = %5.1f dB :  Eb = %.2e,   Total Bits = %8d,   Total Errors = %6d,  Avg BER = %.3e', ...
