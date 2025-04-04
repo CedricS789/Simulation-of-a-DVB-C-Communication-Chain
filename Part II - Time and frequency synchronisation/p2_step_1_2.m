@@ -1,5 +1,6 @@
-%% =================== Step 1_2 - Assessing the effects of CFO and Plotting BER Curve ===================
+%% ======= Step 1_2 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset and Plotting BER Curve =========
 %
+% use of a function to apply Synchronization errors to the signal
 %
 % =======================================================================================
 
@@ -7,7 +8,7 @@ clear; close all; clc;
 addpath('../Part I - Optimal Communication chain over the ideal channel/functions');
 addpath('functions');
 
-%% ========================================== Simulation Parameters  ==========================================
+%% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
 params = initParameters(Nbps);                                      % Initialize fixed parameters from external function
 
@@ -19,7 +20,7 @@ OSF         = params.sampling.OversamplingFactor;                   % Oversampli
 SymRate     = params.timing.SymbolRate;                             % Symbol rate (symbols/sec)
 BitRate     = params.timing.BitRate;                                % Bit rate (bits/sec)
 Fs          = params.sampling.SamplingFrequency;                    % Sampling frequency (samples/sec)
-Ts         = params.sampling.SamplePeriod;                          % Sample period (seconds/sample)
+Ts          = params.sampling.SamplePeriod;                          % Sample period (seconds/sample)
 Beta        = params.filter.RolloffFactor;                          % RRC filter roll-off factor
 NumTaps     = params.filter.NumFilterTaps;                          % Number of RRC filter taps
 
@@ -33,9 +34,9 @@ num_EbN0_points     = length(EbN0_domain_dB);                       % Number of 
 displayParameters(params);
 
 % ---- CFO Parameters ----
-delta_cfo_hz    = 300;                                     % Frequency offset in Hz
-delta_omega     = 2 * pi * delta_cfo_hz;                    % Frequency offset in rad/s
-
+delta_cfo_hz    = 0;                                      % Frequency offset in Hz
+phase_offset    = 0;                                      % Phase offset in rad
+delta_omega_offset = 2 * pi * delta_cfo_hz;               % Frequency offset in rad/s
 
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                               % Stores simulated BER for each Eb/N0 point
@@ -78,10 +79,7 @@ for idx_EbN0 = 1:num_EbN0_points
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
-    num_samples_tx  = length(signal_tx);                            % Number of samples in the transmitted signal
-    time_vector     = (0 : num_samples_tx - 1)' * Ts;                % The TA insisted on this
-    cfo_shift       = exp(1j * delta_omega * time_vector);          % CFO signal
-    signal_tx_cfo   = signal_tx .* cfo_shift;                           % Apply CFO to the transmitted signal
+    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phase_offset, Ts); % Add CFO and phase offset errors
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
 
@@ -95,7 +93,7 @@ for idx_EbN0 = 1:num_EbN0_points
     for iter = 1:iterations_per_EbN0
 
         % -------- 1. AWGN Channel --------
-        signal_tx_noisy = addAWGN(signal_tx_cfo, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
+        signal_tx_noisy = addAWGN(signal_tx_offset, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
 
         % -------- 2. Receiver Chain --------
         signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)

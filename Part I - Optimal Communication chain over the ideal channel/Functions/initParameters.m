@@ -25,7 +25,7 @@ function params = initParameters(Nbps_input)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 1e3;                           % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 1e4;                           % Total data bits (multiple of Nbps)
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
         params.timing.BitRate = params.timing.SymbolRate * params.modulation.Nbps;      % Rb [bps]
@@ -36,14 +36,14 @@ function params = initParameters(Nbps_input)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 401;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps = 701;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
 
         % =====================================================================
         % == Sampling Parameters ==
         % =====================================================================
-        params.sampling.OversamplingFactor = 4;                                                             % Samples per symbol (OSF >= 2)
+        params.sampling.OversamplingFactor = 8;                                                             % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
 

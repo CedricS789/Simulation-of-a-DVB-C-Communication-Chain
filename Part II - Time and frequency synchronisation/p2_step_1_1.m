@@ -13,7 +13,7 @@ clear; close all; clc;
 addpath('../Part I - Optimal Communication chain over the ideal channel/functions');
 
 
-%% ========================================== Load Parameters  ==========================================
+%% ========================================== Load Simulation Parameters  ==========================================
 Nbps    = 4;
 params  = initParameters(Nbps);
 NumBits = params.timing.NumBits;
@@ -29,6 +29,11 @@ NumTaps = params.filter.NumFilterTaps;
 iterations = params.simulation.iterations_per_EbN0;
 displayParameters(params);
 
+% ---- CFO Parameters ----
+delta_cfo_hz    = 300;                                      % Frequency offset in Hz
+delta_omega     = 2 * pi * delta_cfo_hz;                    % Frequency offset in rad/s
+phi_0           = 0;                                        % Phase offset in rad
+
 
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
@@ -41,13 +46,10 @@ signalPower_tx  = mean(abs(signal_tx).^2);
 Eb              = signalPower_tx / BitRate;
 
 % --- Introduce CFO and phase offset ---
-delta_cfo_hz    = 0;                                        % Frequency offset in Hz
-phi_0           = 0;                                       % Phase offset in rad
-delta_omega     = 2 * pi * delta_cfo_hz;                    % Frequency offset in rad/s
 num_samples_tx  = length(signal_tx);                        % Number of samples in the transmitted signal
 time_vector     = (0 : num_samples_tx - 1) * Ts;            % The TA insisted on this
-error_signal    = exp(1j * delta_omega * time_vector + phi_0); % Create the error signal
-signal_tx_cfo   = signal_tx .* error_signal;                      % Apply CFO to the transmitted signal
+offset_signal   = exp(1j * delta_omega * time_vector + phi_0); % Create the offset signal
+signal_tx_cfo   = signal_tx .* offset_signal;                      % Apply CFO to the transmitted signal
 
 % -- Introduce Noise --
 EbN0dB     = 50 ;
