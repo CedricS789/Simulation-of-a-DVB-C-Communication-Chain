@@ -1,4 +1,4 @@
-%%   =================== Step 2 v1 - Simulation over an Ideal Channel (No Noise) ===================
+%%   =================== Step 2_1 - Simulation over an Ideal Channel (No Noise) ===================
 %
 %       Purpose: This script simulates a DVB-C communication chain (transmitter to receiver) 
 %       over an ideal channel without noise. It implements symbol mapping, 

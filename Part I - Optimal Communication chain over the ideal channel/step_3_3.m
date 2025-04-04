@@ -19,6 +19,8 @@
 %       - A figure containing BER vs. Eb/N0 plots for all simulated Nbps values,
 %         comparing simulated points against theoretical curves.
 %
+%
+%   Chain: Bits -> Map -> Upsample -> Tx RRC Filter -> (Ideal Channel + Noise) -> Rx RRC Filter -> Downsample -> Demap -> Bits
 % ==============================================================================
 
 clear; close all; clc;

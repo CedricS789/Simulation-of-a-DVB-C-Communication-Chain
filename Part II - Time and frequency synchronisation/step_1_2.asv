@@ -1,28 +1,11 @@
-%%   =================== Step 3 v1 - Simulation for BER Curve Generation ===================
+%%   =================== Step 3_1 - Simulation for BER Curve Generation ===================
 %
-%       Purpose: This script simulates the communication chain over an AWGN channel across a 
-%       range of Eb/N0 values to generate a BER curve. It assesses 
-%       performance by averaging BER over multiple noise realizations per Eb/N0 point, using 
-%       a single transmitted block per point.
-%
-%       Context: The BER curve validates theoretical 
-%       expectations for a DVB-C system, with parameters like 5 Msymb/s and 0.2 roll-off 
-%       factor. This version consolidates all processing in a single script, offering a complete 
-%       but less modular approach.
-%
-%       Relation to Other Iterations: Extends Step 2 v2’s fixed-noise test to a full Eb/N0 
-%       sweep, building on Step 2 v1’s foundational chain. Compared to Step 3 v2, it lacks 
-%       modularity, embedding all logic inline rather than using separate functions. It 
-%       reflects an earlier attempt at BER curve generation, prioritizing functionality over 
-%       code structure.
-%
-%       Outputs: Generates a BER curve plot comparing simulated results to theoretical values, 
-%       providing a visual performance summary across the Eb/N0 range.
 %
 %   =======================================================================================
 
 clear; close all; clc;
-addpath('functions'); 
+addpath('../Part I - Optimal Communication chain over the ideal channel/functions');
+addpath('functions');
 
 %% ========================================== Simulation Parameters  ==========================================
 Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
@@ -36,6 +19,7 @@ OSF         = params.sampling.OversamplingFactor;                   % Oversampli
 SymRate     = params.timing.SymbolRate;                             % Symbol rate (symbols/sec)
 BitRate     = params.timing.BitRate;                                % Bit rate (bits/sec)
 Fs          = params.sampling.SamplingFrequency;                    % Sampling frequency (samples/sec)
+Ts         = params.sampling.SamplePeriod;                          % Sample period (seconds/sample)
 Beta        = params.filter.RolloffFactor;                          % RRC filter roll-off factor
 NumTaps     = params.filter.NumFilterTaps;                          % Number of RRC filter taps
 
@@ -47,6 +31,11 @@ iterations_per_EbN0 = params.simulation.iterations_per_EbN0;        % Iterations
 EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of Eb/N0 values to simulate (dB)
 num_EbN0_points     = length(EbN0_domain_dB);                       % Number of points on the BER curve
 displayParameters(params);
+
+% ---- CFO Parameters ----
+delta_cfo_hz    = ;                                     % Frequency offset in Hz
+delta_omega     = 2 * pi * delta_cfo_hz;                    % Frequency offset in rad/s
+
 
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                               % Stores simulated BER for each Eb/N0 point
@@ -89,6 +78,10 @@ for idx_EbN0 = 1:num_EbN0_points
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
+    num_samples_tx  = length(signal_tx);                            % Number of samples in the transmitted signal
+    time_vector     = (0 : num_samples_tx - 1)' * Ts;                % The TA insisted on this
+    cfo_shift       = exp(1j * delta_omega * time_vector);          % CFO signal
+    signal_tx_cfo   = signal_tx .* cfo_shift;                           % Apply CFO to the transmitted signal
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
 
@@ -102,7 +95,7 @@ for idx_EbN0 = 1:num_EbN0_points
     for iter = 1:iterations_per_EbN0
 
         % -------- 1. AWGN Channel --------
-        signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
+        signal_tx_noisy = addAWGN(signal_tx_cfo, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
 
         % -------- 2. Receiver Chain --------
         signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)

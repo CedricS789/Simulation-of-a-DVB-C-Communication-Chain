@@ -1,4 +1,4 @@
-%%   =================== Step 3 v2 - Simulation for BER Curve Generation Using Functions ===================
+%%   =================== Step 3_2 - Simulation for BER Curve Generation Using Functions ===================
 %
 %       Purpose: This script generates a BER curve for the communication chain over an AWGN 
 %       channel across a range of Eb/N0 values, as part of the. It refines the simulation 

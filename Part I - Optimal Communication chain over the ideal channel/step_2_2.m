@@ -1,4 +1,4 @@
-%%   =================== Step 2 v2 - Simulation with Fixed Noise Level (Noisy Channel) ===================
+%%   =================== Step 2_2 - Simulation with Fixed Noise Level (Noisy Channel) ===================
 %
 %       Purpose: This script extends the communication chain simulation to include an AWGN 
 %       channel with a fixed Eb/N0. It evaluates the bit 
