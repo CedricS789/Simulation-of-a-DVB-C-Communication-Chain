@@ -10,7 +10,7 @@ addpath('functions');
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
-params = initParameters(Nbps);                                      % Initialize fixed parameters from external function
+params = initParameters_v2(Nbps);                                      % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
 NumBits     = params.timing.NumBits;                                % Bits per Tx block (frame)
@@ -34,9 +34,10 @@ num_EbN0_points     = length(EbN0_domain_dB);                       % Number of 
 displayParameters(params);
 
 % ---- CFO Parameters ----
-delta_cfo_hz    = 0;                                      % Frequency offset in Hz
-phase_offset    = 0;                                      % Phase offset in rad
-delta_omega_offset = 2 * pi * delta_cfo_hz;               % Frequency offset in rad/s
+Fc = 600e6;                                 % Carrier frequency in Hz
+delta_cfo_hz    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_omega     = 2 * pi * delta_cfo_hz;    % Frequency offset in rad/s
+phi_0           = 2.3;                      % Phase offset in rad
 
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
@@ -79,7 +80,7 @@ for idx_EbN0 = 1:num_EbN0_points
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
-    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phase_offset, Ts); % Add CFO and phase offset errors
+    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phi_0, Ts); % Add CFO and phase offset errors
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
 
