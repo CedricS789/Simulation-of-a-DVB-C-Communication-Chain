@@ -33,12 +33,11 @@ EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of E
 num_EbN0_points     = length(EbN0_domain_dB);                       % Number of points on the BER curve
 displayParameters(params);
 
-% ---- CFO Parameters ----
+% ---- CFO and SCO Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
 delta_cfo_hz    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-delta_omega     = 2 * pi * delta_cfo_hz;    % Frequency offset in rad/s
 phi_0           = 2.3;                      % Phase offset in rad
-
+sco_samples_shift = 0;                      % Sample offset (0 samples)
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
 
@@ -80,7 +79,7 @@ for idx_EbN0 = 1:num_EbN0_points
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
-    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phi_0, Ts); % Add CFO and phase offset errors
+    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phi_0, sco_samples_shift, Ts); % Add CFO and phase offset errors
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
 

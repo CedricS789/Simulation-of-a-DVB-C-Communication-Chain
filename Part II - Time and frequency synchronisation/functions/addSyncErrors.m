@@ -1,4 +1,4 @@
-function signal_out = addSyncErrors(signal_in, delta_cfo_hz, phase_offset, Ts)
+function signal_out = addSyncErrors(signal_in, delta_cfo_hz, phase_offset, sco_samples_shift, Ts)
     % ---- signal_in: Input complex baseband signal vector (pulse-shaped). ---
 
     % ---- CFO Parameters ----
@@ -9,5 +9,6 @@ function signal_out = addSyncErrors(signal_in, delta_cfo_hz, phase_offset, Ts)
     time_vector     = (0 : num_samples_tx - 1).' * Ts;          
     offset_signal   = exp(1j * delta_omega_offset * time_vector + phase_offset);
     signal_out      = signal_in .* offset_signal;              % Apply CFO to the transmitted signal
+    signal_out(1:sco_samples_shift) = 0;                       % Time shift (sample_shift samples)
 
 end

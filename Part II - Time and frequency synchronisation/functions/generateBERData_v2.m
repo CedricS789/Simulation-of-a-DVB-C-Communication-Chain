@@ -1,4 +1,4 @@
-function ber_averages_datas = generateBERData_v2(params, delta_cfo_hz, phase_offset)
+function ber_averages_datas = generateBERData_v2(params, delta_cfo_hz, phase_offset, sco_samples_shift)
 
     % --- Extract parameters needed ---
     Nbps        = params.modulation.Nbps;
@@ -51,7 +51,7 @@ function ber_averages_datas = generateBERData_v2(params, delta_cfo_hz, phase_off
         symb_tx = mapping(bit_tx, Nbps, ModType);
         symb_tx_up = upSampler(symb_tx, OSF).';
         signal_tx = applyFilter(symb_tx_up, h_rrc, NumTaps);
-        signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phase_offset, Ts); % Add CFO and phase offset errors
+        signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phase_offset, sco_samples_shift, Ts); % Add CFO and phase offset errors
         signalPower = mean(abs(signal_tx).^2);
         Eb = signalPower / BitRate;             % Energy per bit based on AVERAGE power after shaping
 

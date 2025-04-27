@@ -1,4 +1,4 @@
-%% =================== Step 1_1 - Assessing the Impact of Synchronization Errors - CFO, Phase Offset and Sample Time Offset ===================
+%% =================== Step 1_1 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset ===================
 %   Introduce Errors: The synchronization errors affect the signal as it's received,    
 %   before any receiver processing. So, the point to introduce these errors mathematically  
 %   is after the transmitter's pulse shaping (signal_tx)     
@@ -31,9 +31,9 @@ displayParameters(params);
 
 % ---- CFO Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_hz    = 0 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_cfo_hz    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
 delta_omega     = 2 * pi * delta_cfo_hz;    % Frequency offset in rad/s
-phi_0           = 0;                      % Phase offset in rad
+phi_0           = 0;                        % Phase offset in rad
 
 
 %% ========================================== Communication Chain ==========================================
@@ -47,21 +47,17 @@ signalPower_tx  = mean(abs(signal_tx).^2);
 Eb              = signalPower_tx / BitRate;
 
 % --- Introduce CFO and phase offset ---
-num_samples_tx  = length(signal_tx);                             % Number of samples in the transmitted signal
+num_samples_tx  = length(signal_tx);                              % Number of samples in the transmitted signal
 time_vector     = (0 : num_samples_tx - 1).' * Ts;                % The TA insisted on this
 offset_signal   = exp(1j * (delta_omega * time_vector + phi_0));  % Create the offset signal
-signal_tx_offset   = signal_tx .* offset_signal;                   % Apply CFO to the transmitted signal
-
-% ---- Sample Time Offset ----
+signal_tx_offset   = signal_tx .* offset_signal;                  % Apply CFO to the transmitted signal
 
 % -- Introduce Noise --
 EbN0dB     = 1000;
 % signal_tx_noisy = addAWGN(signal_tx_offset, Eb, EbN0dB, OSF, SymRate);
 
-
 % --- Receiver Chain ---
 signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);
-signal_rx(1:) = 0;
 symb_rx    = downSampler(signal_rx, OSF).';
 bit_rx     = demapping_v2(symb_rx, Nbps, ModType); 
 bit_rx     = bit_rx(:).';  
