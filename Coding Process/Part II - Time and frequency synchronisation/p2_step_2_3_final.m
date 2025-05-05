@@ -1,4 +1,4 @@
-%% ======= Step 2_v3 - Assessing the Impact of Synchronization Errors - BER Comparison =========
+%% ======= Step 2_v3 - Assessing the Impact of Synchronization Errors - Plotting BER =========
 % 
 % Applying a Modular approach to Synchronization errors Addition
 % and Plotting the BER curve for different CFO and phase offset values using functions
