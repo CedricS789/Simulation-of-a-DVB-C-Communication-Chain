@@ -1,16 +1,4 @@
-function ber_averages_datas = generateBERData(params)
-    %   Runs BER simulation for ONE specific parameter set.
-    %   Generates data, runs through Tx -> Channel -> Rx chain over a range
-    %   of Eb/N0 values for a given modulation and system configuration.
-    %
-    %   Inputs:
-    %       params - Struct containing all parameters for this run (from coreParameters).
-    %
-    %   Outputs:
-    %       EbN0_domain_dB - Vector of Eb/N0 values used (dB).
-    %       ber_values     - Vector of corresponding simulated BER values.
-    %       actual_bits_simulated - Total bits simulated per Eb/N0 point.
-    %       actual_errors_accumulated - Total errors accumulated per Eb/N0 point.
+function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_offset, time_shift)
 
     % --- Extract parameters needed ---
     Nbps        = params.modulation.Nbps;
@@ -25,11 +13,12 @@ function ber_averages_datas = generateBERData(params)
     EbN0_max_dB = params.simulation.EbN0_max_dB;
     EbN0_step_dB = params.simulation.EbN0_step_dB;
     EbN0_domain_dB      = params.simulation.EbN0_domain_dB;
+    Ts                  = params.sampling.SamplePeriod;
     iterations_per_EbN0 = params.simulation.iterations_per_EbN0;
     num_EbN0_points     = length(EbN0_domain_dB);
 
-    % ---- Setup ----
-    ber_averages_datas = zeros(1, num_EbN0_points);
+   % --- Pre-allocate results array ---
+    ber_data = zeros(1, num_EbN0_points);
 
     fprintf('========================================');
     fprintf('\n    Simulation Initialization         ');
@@ -73,11 +62,12 @@ function ber_averages_datas = generateBERData(params)
             % -------- 1. AWGN Channel --------
              % Ensure addAWGN uses the calculated Eb for THIS signal
             signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
+            signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phase_offset, time_shift, Ts); % Add CFO and phase offset errors
 
             % -------- 2. Receiver Chain --------
-            signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);
+            signal_rx_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);
             symb_rx = downSampler(signal_rx_filtered, OSF).';
-            bit_rx = demapping_v2(symb_rx, Nbps, ModType);
+            bit_rx = demapping(symb_rx, Nbps, ModType);
             bit_rx = bit_rx(:).';
 
             % -------- 3. Calculate Errors for this iteration --------
@@ -88,15 +78,14 @@ function ber_averages_datas = generateBERData(params)
             total_bits_sim_point = total_bits_sim_point + bits_iter;
         end
 
-        ber_averages_datas(idx_EbN0) = total_bit_errors_point / total_bits_sim_point; % Calculate and store the average BER
+        ber_data(idx_EbN0) = total_bit_errors_point / total_bits_sim_point; % Calculate and store the average BER
             
         fprintf('\n  Eb/N0 = %5.1f dB :  Eb = %.2e,   Total Bits = %8d,   Total Errors = %6d,  Avg BER = %.3e', ...
-             EbN0dB, Eb, total_bits_sim_point, total_bit_errors_point, ber_averages_datas(idx_EbN0));
+             EbN0dB, Eb, total_bits_sim_point, total_bit_errors_point, ber_data(idx_EbN0));
 
     end
     fprintf('\n================================================================================');
     fprintf('\n\n========================================');
     fprintf('\n       Generation Complete            ');
     fprintf('\n========================================\n');
-
 end

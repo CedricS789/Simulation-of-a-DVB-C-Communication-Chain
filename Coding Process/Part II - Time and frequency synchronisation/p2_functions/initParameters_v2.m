@@ -1,18 +1,18 @@
-function params = initParameters_v2(Nbps_input)
+function params = initParameters_v2(Nbps)
     %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
     %   Sets up modulation, timing, filter, sampling, and simulation settings.
     %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
     %   
     %   Inputs:
-    %       Nbps_input - Number of bits per symbol (k) for modulation.
-    %       Nbps_input = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
+    %       Nbps - Number of bits per symbol (k) for modulation.
+    %       Nbps = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
     %   Outputs:
-    %       params - Struct containing all parameters for the modulation scheme (Nbps_input).
+    %       params - Struct containing all parameters for the modulation scheme (Nbps).
 
         % =====================================================================
         % == Modulation Parameters ==
         % =====================================================================
-        params.modulation.Nbps = Nbps_input;                            % Bits per symbol (k)
+        params.modulation.Nbps = Nbps;                            % Bits per symbol (k)
         params.modulation.ModulationOrder = 2^params.modulation.Nbps;   % M = 2^k
 
         % Determine Modulation Type based on Nbps (PAM for k=1 or odd, QAM for even k>=2)
@@ -59,12 +59,4 @@ function params = initParameters_v2(Nbps_input)
         EbN0_max_dB                         = params.simulation.EbN0_max_dB;                % Maximum Eb/N0 value in dB
         EbN0_step_dB                        = params.simulation.EbN0_step_dB;               % Step size for Eb/N0 sweep in dB
         params.simulation.EbN0_domain_dB    = EbN0_min_dB:EbN0_step_dB:EbN0_max_dB;         % Range of Eb/N0 values to simulate (dB)
-
-        
-        % =====================================================================
-        % == Parameters Specifically for Time Shift Simulation ==
-        % =====================================================================
-        params.sampling.OversamplingFactor2 = 100; 
-        params.sampling.SamplingFrequency2  = params.sampling.OversamplingFactor2 * params.timing.SymbolRate;   % Fs [Hz]
-        params.sampling.SamplePeriod2 = 1 / params.sampling.SamplingFrequency2;                                 % Tsamp [s]
 end

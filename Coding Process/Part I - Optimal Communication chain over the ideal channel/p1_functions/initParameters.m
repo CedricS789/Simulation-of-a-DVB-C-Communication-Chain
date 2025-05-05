@@ -1,18 +1,18 @@
-function params = initParameters(Nbps_input)
+function params = initParameters(Nbps)
     %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
     %   Sets up modulation, timing, filter, sampling, and simulation settings.
     %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
     %   
     %   Inputs:
-    %       Nbps_input - Number of bits per symbol (k) for modulation.
-    %       Nbps_input = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
+    %       Nbps - Number of bits per symbol (k) for modulation.
+    %       Nbps = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
     %   Outputs:
-    %       params - Struct containing all parameters for the modulation scheme (Nbps_input).
+    %       params - Struct containing all parameters for the modulation scheme (Nbps).
 
         % =====================================================================
         % == Modulation Parameters ==
         % =====================================================================
-        params.modulation.Nbps = Nbps_input;                            % Bits per symbol (k)
+        params.modulation.Nbps = Nbps;                            % Bits per symbol (k)
         params.modulation.ModulationOrder = 2^params.modulation.Nbps;   % M = 2^k
 
         % Determine Modulation Type based on Nbps (PAM for k=1 or odd, QAM for even k>=2)

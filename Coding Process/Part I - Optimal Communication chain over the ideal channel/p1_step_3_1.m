@@ -22,7 +22,7 @@
 %   =======================================================================================
 
 clear; close all; clc;
-addpath('functions'); 
+addpath('p1_functions'); 
 
 %% ========================================== Simulation Parameters  ==========================================
 Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)

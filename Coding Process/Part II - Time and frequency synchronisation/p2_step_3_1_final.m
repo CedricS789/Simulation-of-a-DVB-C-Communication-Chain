@@ -4,9 +4,11 @@
 %
 %% ============================================================================================
 
+
 clear; close all; clc;
-addpath('../Part I - Optimal Communication chain over the ideal channel/functions');
-addpath('functions')
+addpath('../Part I - Optimal Communication chain over the ideal channel/p1_functions');
+addpath('p2_functions')
+
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps    = 2;
@@ -27,9 +29,10 @@ displayParameters(params);
 
 % ---- CFO Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_hz    = 0 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-delta_omega     = 2 * pi * delta_cfo_hz;    % Frequency offset in rad/s
+delta_cfo_ppm    = 0 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_omega     = 2 * pi * delta_cfo_ppm;    % Frequency offset in rad/s
 phi_0           = 0;                        % Phase offset in rad
+
 
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
@@ -49,3 +52,19 @@ num_samples_tx  = length(signal_tx);                                % Number of 
 time_vector     = (0 : num_samples_tx - 1).' * Ts;                  % The TA insisted on this
 offset_signal   = exp(1j * (delta_omega * time_vector + phi_0));    % Create the offset signal
 signal_tx_offset   = signal_tx .* offset_signal;                    % Apply CFO to the transmitted signal
+
+% --- Receiver Chain ---
+signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);
+signal_rx(1:5) = 0;                                                 % Introduce Time shift Offset
+symb_rx    = downSampler(signal_rx, OSF).';
+bit_rx     = demapping(symb_rx, Nbps, ModType); 
+bit_rx     = bit_rx(:).'; 
+
+
+%% ====================== Generate Plots  =======================
+bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
+plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);

@@ -21,7 +21,7 @@
 %   ====================================================================================================
 
 clear; close all; clc;
-addpath('functions');
+addpath('p1_functions');
 Nbps    = 4;
 params  = initParameters(Nbps);
 displayParameters(params);

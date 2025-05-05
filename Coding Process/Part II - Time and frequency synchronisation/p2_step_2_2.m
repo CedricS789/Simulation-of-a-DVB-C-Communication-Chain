@@ -5,11 +5,11 @@
 % =======================================================================================
 
 clear; close all; clc;
-addpath('../Part I - Optimal Communication chain over the ideal channel/functions');
-addpath('functions');
+addpath('../Part I - Optimal Communication chain over the ideal channel/p1_functions');
+addpath('p2_functions');
 
 %% ========================================== Load Simulation Parameters  ==========================================
-Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
+Nbps = 2;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
 params = initParameters_v2(Nbps);                                      % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
@@ -34,10 +34,10 @@ num_EbN0_points     = length(EbN0_domain_dB);                       % Number of 
 displayParameters(params);
 
 % ---- CFO and SCO Parameters ----
-Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_hz    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-phi_0           = 2.3;                      % Phase offset in rad
-sco_samples_shift = 0;                      % Sample offset (0 samples)
+Fc = 600e6;                                     % Carrier frequency in Hz
+delta_cfo_ppm    = 2 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+phi_0           = 0;                      % Phase offset in rad
+time_shift = 10;                      % Sample offset (0 samples)
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
 
@@ -79,7 +79,6 @@ for idx_EbN0 = 1:num_EbN0_points
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
-    signal_tx_offset = addSyncErrors(signal_tx, delta_cfo_hz, phi_0, sco_samples_shift, Ts); % Add CFO and phase offset errors
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
 
@@ -93,12 +92,14 @@ for idx_EbN0 = 1:num_EbN0_points
     for iter = 1:iterations_per_EbN0
 
         % -------- 1. AWGN Channel --------
-        signal_tx_noisy = addAWGN(signal_tx_offset, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
+        signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
+        signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phi_0, time_shift, Ts); % Add CFO and phase offset errors
+
 
         % -------- 2. Receiver Chain --------
-        signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
+        signal_rx_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
         symb_rx = downSampler(signal_rx_filtered, OSF).';                   % Downsample to symbol rate, transpose back
-        bit_rx = demapping_v2(symb_rx, Nbps, ModType);                      % Demap received symbols to bits
+        bit_rx = demapping(symb_rx, Nbps, ModType);                      % Demap received symbols to bits
         bit_rx = bit_rx(:).';                                               % Ensure bit_rx is a row vector
 
         % -------- 3. Calculate Errors for this iteration --------
@@ -126,7 +127,7 @@ fprintf('\nEb/N0 Loop Complete.');
 fprintf('\n========================================');
 
 
-%% ========================================== Plotting Results ==========================================
+%% ========================================== Plotting BER ==========================================
 fprintf('\n\n========================================');
 fprintf('\nPlotting BER Curve...');
 fprintf('\n========================================');

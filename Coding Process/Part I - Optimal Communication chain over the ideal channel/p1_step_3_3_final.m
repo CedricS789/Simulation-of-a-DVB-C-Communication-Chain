@@ -24,7 +24,7 @@
 % ==============================================================================
 
 clear; close all; clc;
-addpath('functions'); % Ensure your functions folder is in the path
+addpath('p1_functions'); % Ensure your functions folder is in the path
 
 %% ========================== Simulation Setup ============================
 % Define the Nbps values to simulate 

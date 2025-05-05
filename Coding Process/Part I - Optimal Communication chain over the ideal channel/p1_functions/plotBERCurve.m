@@ -1,4 +1,4 @@
-function hFig = plotBERCurve(ber_averages_datas, params)
+function hFig = plotBERCurve(ber_data, params)
     %   Generates a simplified Bit Error Rate (BER) curve plot, comparing
     %   simulated BER results against theoretical BER values for AWGN channels.
     %   Assumes valid, non-empty inputs for plotting.
@@ -91,7 +91,7 @@ function hFig = plotBERCurve(ber_averages_datas, params)
         hold on;
 
         % Plot Simulated Data
-        semilogy(EbN0_domain_dB, ber_averages_datas,...
+        semilogy(EbN0_domain_dB, ber_data,...
                  'LineStyle', simLineStyle,...
                  'Marker', simMarker,...
                  'Color', simColor,...
@@ -110,7 +110,7 @@ function hFig = plotBERCurve(ber_averages_datas, params)
         legend('show', 'Location', legendLocation);
 
         % Adjust y-axis limits based on SIMULATED data and floor
-        valid_ber_sim = ber_averages_datas(ber_averages_datas > 0 & ~isnan(ber_averages_datas));
+        valid_ber_sim = ber_data(ber_data > 0 & ~isnan(ber_data));
         if isempty(valid_ber_sim)
              min_ber_plot = yAxisMinBERFloor; % Default if no valid simulated points > 0
         else
