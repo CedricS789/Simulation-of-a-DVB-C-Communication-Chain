@@ -1,4 +1,4 @@
-%% ======= Step 1_2 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset and Plotting BER Curve =========
+%% ======= Step 2_v2 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset and Plotting BER Curve =========
 %
 % use of a function to apply Synchronization errors to the signal
 %
