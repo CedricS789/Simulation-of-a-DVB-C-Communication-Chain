@@ -1,10 +1,10 @@
-%% =================== Step 2_v1 - Assessing the Impact of Synchronization Errors - CFO, Phase Offset and Sample Time Offset ===================
+%% =================== Step 2_1 - Assessing the Impact of Synchronization Errors - CFO, Phase Offset and Sample Time Offset ===================
 %   Introduce Errors: The synchronization errors affect the signal as it's received,    
 %   before any receiver processing. So, the point to introduce these errors mathematically  
 %   is after the transmitter's pulse shaping (signal_tx)     
 %   and before the receiver's matched filter (signal_rx)
 %
-%   Chain: Bits -> Map -> Upsample -> h_rrc filter-> signal_tx -> Apply Sync Errors -> Add AWGN -> signal_rx_filtered -> ...
+%   Chain: Bits -> Map -> Upsample -> h_rrc filter-> signal_tx -> Add AWGN -> Apply Sync Errors -> signal_rx_filtered -> ...
 %   
 % =================================================================================================================================
 
@@ -29,11 +29,12 @@ NumTaps = params.filter.NumFilterTaps;
 iterations = params.simulation.iterations_per_EbN0;
 displayParameters(params);
 
-% ---- CFO Parameters ----
+% ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_cfo_ppm    = 2 * 1e-6 * Fc;           % Frequency offset in Hz (1 ppm)
 delta_omega     = 2 * pi * delta_cfo_ppm;   % Frequency offset in rad/s
 phi_0           = 0;                        % Phase offset in rad
+sample_time_offset = 500;                      % Sample offset (0 samples)
 
 
 %% ========================================== Communication Chain ==========================================
@@ -50,16 +51,15 @@ Eb              = signalPower_tx / BitRate;
 EbN0dB = 1000;
 signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
 
-% --- Introduce CFO and phase offset ---
-num_samples_tx  = length(signal_tx_noisy);                                % Number of samples in the transmitted signal
+% --- Introduce CFO, phase offset and sample time offset ---
+num_samples_tx  = length(signal_tx_noisy);                          % Number of samples in the transmitted signal
 time_vector     = (0 : num_samples_tx - 1).' * Ts;                  % The TA insisted on this
 offset_signal   = exp(1j * (delta_omega * time_vector + phi_0));    % Create the offset signal
-signal_tx_offset   = signal_tx_noisy .* offset_signal;                    % Apply CFO to the transmitted signal
-
+signal_tx_offset   = signal_tx_noisy .* offset_signal;              % Apply CFO to the transmitted signal
+signal_tx_offset(1:sample_time_offset) = 0;                         % Time shift (sample_shift samples)
 
 % --- Receiver Chain ---
 signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);
-signal_rx(1:5) = 0;                                                 % Time shift
 symb_rx    = downSampler(signal_rx, OSF).';
 bit_rx     = demapping(symb_rx, Nbps, ModType); 
 bit_rx     = bit_rx(:).';  

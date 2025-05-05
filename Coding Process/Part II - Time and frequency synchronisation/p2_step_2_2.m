@@ -1,8 +1,8 @@
-%% ======= Step 2_v2 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset and Plotting BER Curve =========
+%% ======= Step 2_2 - Assessing the Impact of Synchronization Errors - Plotting BER Curve - Using a Function =========
+
+% use the function addSyncErrors() to apply Synchronization errors to the signal. And Plot of the BER curve.
 %
-% use of a function to apply Synchronization errors to the signal
-%
-% =======================================================================================
+% ==============================================================================================================================================
 
 clear; close all; clc;
 addpath('../Part I - Optimal Communication chain over the ideal channel/p1_functions');
@@ -10,7 +10,7 @@ addpath('p2_functions');
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 2;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
-params = initParameters_v2(Nbps);                                      % Initialize fixed parameters from external function
+params = initParameters_v2(Nbps);                                    % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
 NumBits     = params.timing.NumBits;                                % Bits per Tx block (frame)
@@ -31,13 +31,15 @@ EbN0_step_dB        = params.simulation.EbN0_step_dB;               % Step size 
 iterations_per_EbN0 = params.simulation.iterations_per_EbN0;        % Iterations for averaging BER at each Eb/N0 point
 EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of Eb/N0 values to simulate (dB)
 num_EbN0_points     = length(EbN0_domain_dB);                       % Number of points on the BER curve
+
 displayParameters(params);
 
-% ---- CFO and SCO Parameters ----
+% ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                                     % Carrier frequency in Hz
-delta_cfo_ppm    = 2 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_cfo_ppm    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
 phi_0           = 0;                      % Phase offset in rad
-time_shift = 10;                      % Sample offset (0 samples)
+sample_time_offset = 10;                      % Sample offset (0 samples)
+
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
 
@@ -93,7 +95,7 @@ for idx_EbN0 = 1:num_EbN0_points
 
         % -------- 1. AWGN Channel --------
         signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
-        signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phi_0, time_shift, Ts); % Add CFO and phase offset errors
+        signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phi_0, sample_time_offset, Ts); % Add CFO and phase offset errors
 
 
         % -------- 2. Receiver Chain --------

@@ -18,8 +18,8 @@ displayParameters(params);
 Fc = 600e6;                                 % Carrier frequency in Hz
 delta_cfo_ppm  = 0.05 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
 phi_0 = 0;                              % Phase offset in rad
-time_shift = 0;                      % Sample offset (0 samples)
+sample_time_offset = 0;                      % Sample offset (0 samples)
 
 % --- Plots ---
-ber_datas = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phi_0, time_shift);
+ber_datas = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phi_0, sample_time_offset);
 plotBERCurve(ber_datas, params);

@@ -1,4 +1,4 @@
-%% =================== Step 1_1 - Assessing the Impact of Synchronization Errors - CFO and Phase Offset ===================
+%% =================== Step 1_1_final - Assessing the Impact of Synchronization Errors - CFO and Phase Offset ===================
 %   Introduce Errors: The synchronization errors affect the signal as it's received,    
 %   before any receiver processing. So, the point to introduce these errors mathematically  
 %   is after the transmitter's pulse shaping (signal_tx)     

@@ -1,4 +1,4 @@
-function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_offset, time_shift)
+function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_offset, sample_time_offset)
 
     % --- Extract parameters needed ---
     Nbps        = params.modulation.Nbps;
@@ -62,7 +62,7 @@ function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_o
             % -------- 1. AWGN Channel --------
              % Ensure addAWGN uses the calculated Eb for THIS signal
             signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
-            signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phase_offset, time_shift, Ts); % Add CFO and phase offset errors
+            signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phase_offset, sample_time_offset, Ts); % Add CFO and phase offset errors
 
             % -------- 2. Receiver Chain --------
             signal_rx_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);
