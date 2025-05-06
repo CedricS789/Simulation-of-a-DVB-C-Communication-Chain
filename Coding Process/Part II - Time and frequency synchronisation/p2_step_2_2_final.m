@@ -36,9 +36,9 @@ displayParameters(params);
 
 % ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                                     % Carrier frequency in Hz
-delta_cfo_ppm    = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
 phi_0           = 0;                      % Phase offset in rad
-sample_time_offset = 10;                      % Sample offset (0 samples)
+sample_time_offset = 500;                      % Sample offset (0 samples)
 
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
@@ -99,8 +99,8 @@ for idx_EbN0 = 1:num_EbN0_points
 
 
         % -------- 2. Receiver Chain --------
-        signal_rx_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
-        symb_rx = downSampler(signal_rx_filtered, OSF).';                   % Downsample to symbol rate, transpose back
+        signal_rx = applyFilter(signal_tx_offset, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
+        symb_rx = downSampler(signal_rx, OSF).';                   % Downsample to symbol rate, transpose back
         bit_rx = demapping(symb_rx, Nbps, ModType);                      % Demap received symbols to bits
         bit_rx = bit_rx(:).';                                               % Ensure bit_rx is a row vector
 
@@ -129,12 +129,14 @@ fprintf('\nEb/N0 Loop Complete.');
 fprintf('\n========================================');
 
 
-%% ========================================== Plotting BER ==========================================
-fprintf('\n\n========================================');
-fprintf('\nPlotting BER Curve...');
-fprintf('\n========================================');
-
+%% ====================== Generate Plots  =======================
 plotBERCurve(ber_data, params);
+bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
+plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 fprintf('\n\n========================================');
 fprintf('\nPlotting complete.');

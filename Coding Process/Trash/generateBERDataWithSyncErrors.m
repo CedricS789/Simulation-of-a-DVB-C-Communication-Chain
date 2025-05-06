@@ -4,6 +4,7 @@ function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_o
     Nbps        = params.modulation.Nbps;
     NumBits     = params.timing.NumBits;
     ModType     = params.modulation.ModulationType;
+    ModOrder    = params.modulation.ModulationOrder;
     OSF         = params.sampling.OversamplingFactor;
     SymRate     = params.timing.SymbolRate;
     BitRate     = params.timing.BitRate;
@@ -14,6 +15,7 @@ function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_o
     EbN0_step_dB = params.simulation.EbN0_step_dB;
     EbN0_domain_dB      = params.simulation.EbN0_domain_dB;
     Ts                  = params.sampling.SamplePeriod;
+    Fs                  = params.sampling.SamplingFrequency;
     iterations_per_EbN0 = params.simulation.iterations_per_EbN0;
     num_EbN0_points     = length(EbN0_domain_dB);
 
@@ -65,8 +67,8 @@ function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_o
             signal_tx_offset = addSyncErrors(signal_tx_noisy, delta_cfo_ppm, phase_offset, sample_time_offset, Ts); % Add CFO and phase offset errors
 
             % -------- 2. Receiver Chain --------
-            signal_rx_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);
-            symb_rx = downSampler(signal_rx_filtered, OSF).';
+            signal_rx = applyFilter(signal_tx_offset, h_rrc, NumTaps);
+            symb_rx = downSampler(signal_rx, OSF).';
             bit_rx = demapping(symb_rx, Nbps, ModType);
             bit_rx = bit_rx(:).';
 
@@ -84,6 +86,15 @@ function ber_data = generateBERDataWithSyncErrors(params, delta_cfo_ppm, phase_o
              EbN0dB, Eb, total_bits_sim_point, total_bit_errors_point, ber_data(idx_EbN0));
 
     end
+
+    %% ====================== Generate Plots  =======================
+    bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+    plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
+    plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+    plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+    plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+    plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+
     fprintf('\n================================================================================');
     fprintf('\n\n========================================');
     fprintf('\n       Generation Complete            ');
