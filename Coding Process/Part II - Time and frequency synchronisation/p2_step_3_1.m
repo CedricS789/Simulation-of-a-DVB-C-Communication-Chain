@@ -38,6 +38,7 @@ phi_0           = 0;                        % Phase offset in rad
 kappa = 0.01;                               % Gain for the Gardner algorithm. This is the crucial tuning parameter. It controls how quickly the loop adapts. Too large, and it might overshoot or become unstable; too small, and it converges slowly.
 timing_offset_norm = 0.1;           % Normalized timing offset (0.1 = 10% of the symbol period)
 
+
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
 bit_tx      = randi([0, 1], 1, NumBits).';
