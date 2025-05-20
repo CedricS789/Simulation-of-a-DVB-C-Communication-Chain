@@ -9,8 +9,8 @@ addpath('../Part I - Optimal Communication chain over the ideal channel/p1_funct
 addpath('p2_functions')
 
 %% ========================================== Load Simulation Parameters  ==========================================
-Nbps    = 2;
-params  = initParameters_v2(Nbps);
+Nbps    = 4;
+params  = initParameters_2(Nbps);
 NumBits = params.timing.NumBits;
 ModType = params.modulation.ModulationType;
 ModOrder= params.modulation.ModulationOrder;
@@ -29,10 +29,10 @@ displayParameters(params);
 
 % ---- CFO and Sample Time Offset Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_ppm   = 0.08 * 1e-6 * Fc;         % Frequency offset in Hz (0.08 ppm)
+delta_cfo_ppm   = 0.0 * 1e-6 * Fc;         % Frequency offset in Hz (0.08 ppm)
 delta_omega     = 2 * pi * delta_cfo_ppm;   % Frequency offset in rad/s
 phi_0           = 0;                        % Phase offset in rad
-timing_offset_norm = 0.1;                   % Normalized timing offset (10% of symbol period)
+timing_offset_norm = 0.9;                   % Normalized timing offset (10% of symbol period)
 initial_offset_samples = round(timing_offset_norm * OSF); % Initial offset in samples (1 sample)
 
 % --- Gardner Algorithm Initialization ---

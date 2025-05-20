@@ -1,8 +1,9 @@
 %% ======= Step 2_2 - Assessing the Impact of Synchronization Errors - Plotting BER Curve - Using a Function =========
-
+%
 % use the function addSyncErrors() to apply Synchronization errors to the signal. And Plot of the BER curve.
 %
 % ==============================================================================================================================================
+
 
 clear; close all; clc;
 addpath('../Part I - Optimal Communication chain over the ideal channel/p1_functions');
@@ -10,7 +11,7 @@ addpath('p2_functions');
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 2;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
-params = initParameters_v2(Nbps);                                    % Initialize fixed parameters from external function
+params = initParameters_2(Nbps);                                    % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
 NumBits     = params.timing.NumBits;                                % Bits per Tx block (frame)
@@ -38,7 +39,7 @@ displayParameters(params);
 Fc = 600e6;                                     % Carrier frequency in Hz
 delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
 phi_0           = 0;                      % Phase offset in rad
-sample_time_offset = 500;                      % Sample offset (0 samples)
+sample_time_offset = 0.1*OSF;                      % Sample offset (0 samples)
 
 % --- Pre-allocate results array ---
 ber_data = zeros(1, num_EbN0_points);                     % Stores simulated BER for each Eb/N0 point
@@ -131,12 +132,12 @@ fprintf('\n========================================');
 
 %% ====================== Generate Plots  =======================
 plotBERCurve(ber_data, params);
-bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+% bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+% plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
+% plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+% plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+% plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+% plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 fprintf('\n\n========================================');
 fprintf('\nPlotting complete.');

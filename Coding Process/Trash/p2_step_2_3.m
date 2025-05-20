@@ -11,7 +11,7 @@ addpath('p2_functions');
 
 % -- Load Simulation Parameters ---
 Nbps    = 2;
-params  = initParameters_v2(Nbps);
+params  = initParameters_2(Nbps);
 displayParameters(params);
     
 % ---- CFO and SCO Parameters ----

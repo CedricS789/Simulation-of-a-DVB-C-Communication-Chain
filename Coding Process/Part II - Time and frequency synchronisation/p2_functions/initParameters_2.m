@@ -1,4 +1,4 @@
-function params = initParameters_v2(Nbps)
+function params = initParameters_2(Nbps)
     %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
     %   Sets up modulation, timing, filter, sampling, and simulation settings.
     %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
@@ -37,7 +37,7 @@ function params = initParameters_v2(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 101;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps = 701;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
 
