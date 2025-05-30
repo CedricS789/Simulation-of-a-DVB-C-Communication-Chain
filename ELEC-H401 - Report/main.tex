@@ -1,32 +1,24 @@
 \documentclass[11pt]{article}
-\include{packages}
+\input{packages}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\onehalfspacing
+
 \begin{document}
 \justifying
 
-% With '\justifying' you can create a blank line just with a '//', example:
-% Some text here.//
-% //
-% Some other text here. 
-%
-
-% The project has the structure for a MA thesis. You can delete abstract etc. if it is just for a report or something else. 
-
 \include{Content/TitlePage}
-\include{Content/Abstract}
-\include{Content/Acknowledgments}
-\include{Content/ListOfSymbols.tex}
 \tableofcontents
 \newpage
 \listoffigures
-\newpage
-\include{Content/Introduction}
-\include{Content/Chapter1}
-\include{Content/Chapter2}
-\include{Content/Chapter3}
-\include{Content/Chapter4}
-\include{Content/Conclusion}
-\newpage
-\bibliographystyle{unsrt}
-\bibliography{sources.bib}
+
+\include{Content/introduction}
+\include{Content/part1}
+\include{Content/part2}
+\include{Content/part3}
+\include{Content/conclusion}
+
 
 \end{document}

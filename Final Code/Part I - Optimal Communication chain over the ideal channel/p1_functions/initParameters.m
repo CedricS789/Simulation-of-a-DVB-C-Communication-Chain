@@ -1,4 +1,4 @@
-function params = initParameters_2(Nbps)
+function params = initParameters(Nbps)
     %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
     %   Sets up modulation, timing, filter, sampling, and simulation settings.
     %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
@@ -25,8 +25,7 @@ function params = initParameters_2(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^8;                          % Total data bits (multiple of Nbps)
-        params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
+        params.timing.NumBits = params.modulation.Nbps * 2^9;                           % Total data bits (multiple of Nbps)
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
         params.timing.BitRate = params.timing.SymbolRate * params.modulation.Nbps;      % Rb [bps]
@@ -37,27 +36,28 @@ function params = initParameters_2(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 701;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps = 201;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
 
         % =====================================================================
         % == Sampling Parameters ==
         % =====================================================================
-        params.sampling.OversamplingFactor = 50;                                                             % Samples per symbol (OSF >= 2)
+        params.sampling.OversamplingFactor = 8;                                                             % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
 
         % =====================================================================
         % == BER Curve Simulation Parameters ==
         % =====================================================================
-        params.simulation.EbN0_min_dB = 0;                     % Start Eb/N0 [dB]
-        params.simulation.EbN0_max_dB = 20;                    % End Eb/N0 [dB]
-        params.simulation.EbN0_step_dB = 1;                    % Step size Eb/N0 [dB]
-        params.simulation.iterations_per_EbN0 = 30;            % Averaging iterations per point
+        params.simulation.EbN0_min_dB = -5;                      % Start Eb/N0 [dB]
+        params.simulation.EbN0_max_dB = 15;                      % End Eb/N0 [dB]
+        params.simulation.EbN0_step_dB = 1;                      % Step size Eb/N0 [dB]
+        params.simulation.iterations_per_EbN0 = 1;               % Averaging iterations per point
         
-        min = params.simulation.EbN0_min_dB;                   % Minimum Eb/N0 value in dB
-        max = params.simulation.EbN0_max_dB;                   % Maximum Eb/N0 value in dB
-        iter = params.simulation.EbN0_step_dB;                 % Step size for Eb/N0 sweep in dB
-        params.simulation.EbN0_domain_dB = (min:iter:max)';    % Range of Eb/N0 values to simulate (dB)
+        EbN0_min_dB                         = params.simulation.EbN0_min_dB;                % Minimum Eb/N0 value in dB
+        EbN0_max_dB                         = params.simulation.EbN0_max_dB;                % Maximum Eb/N0 value in dB
+        EbN0_step_dB                        = params.simulation.EbN0_step_dB;               % Step size for Eb/N0 sweep in dB
+        params.simulation.EbN0_domain_dB    = EbN0_min_dB:EbN0_step_dB:EbN0_max_dB;         % Range of Eb/N0 values to simulate (dB)
+
 end

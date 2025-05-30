@@ -1,17 +1,32 @@
-%% ======= Step 2_2 - Assessing the Impact of Synchronization Errors - Plotting BER Curve - Using a Function =========
+%%   =================== Step 3_1 - Simulation for BER Curve Generation ===================
 %
-% Use the function addSyncErrors() to apply Synchronization errors to the signal. And Plot of the BER curve.
+%       Purpose: This script simulates the communication chain over an AWGN channel across a 
+%       range of Eb/N0 values to generate a BER curve. It assesses 
+%       performance by averaging BER over multiple noise realizations per Eb/N0 point, using 
+%       a single transmitted block per point.
 %
-% ==============================================================================================================================================
-
+%       Context: The BER curve validates theoretical 
+%       expectations for a DVB-C system, with parameters like 5 Msymb/s and 0.2 roll-off 
+%       factor. This version consolidates all processing in a single script, offering a complete 
+%       but less modular approach.
+%
+%       Relation to Other Iterations: Extends Step 2 v2’s fixed-noise test to a full Eb/N0 
+%       sweep, building on Step 2 v1’s foundational chain. Compared to Step 3 v2, it lacks 
+%       modularity, embedding all logic inline rather than using separate functions. It 
+%       reflects an earlier attempt at BER curve generation, prioritizing functionality over 
+%       code structure.
+%
+%       Outputs: Generates a BER curve plot comparing simulated results to theoretical values, 
+%       providing a visual performance summary across the Eb/N0 range.
+%
+%   =======================================================================================
 
 clear; close all; clc;
-addpath('../Part I - Optimal Communication chain over the ideal channel/p1_functions');
-addpath('p2_functions');
+addpath('p1_functions'); 
 
-%% ========================================== Load Simulation Parameters  ==========================================
-Nbps = 2;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
-params = initParameters_2(Nbps);                                    % Initialize fixed parameters from external function
+%% ========================================== Simulation Parameters  ==========================================
+Nbps = 4;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
+params = initParameters(Nbps);                                      % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
 NumBits     = params.timing.NumBits;                                % Bits per Tx block (frame)
@@ -19,10 +34,8 @@ ModType     = params.modulation.ModulationType;                     % Modulation
 ModOrder    = params.modulation.ModulationOrder;                    % Modulation order (M = 2^Nbps)
 OSF         = params.sampling.OversamplingFactor;                   % Oversampling factor
 SymRate     = params.timing.SymbolRate;                             % Symbol rate (symbols/sec)
-Tsymb       = params.timing.SymbolPeriod;
 BitRate     = params.timing.BitRate;                                % Bit rate (bits/sec)
 Fs          = params.sampling.SamplingFrequency;                    % Sampling frequency (samples/sec)
-Ts          = params.sampling.SamplePeriod;                         % Sample period (seconds/sample)
 Beta        = params.filter.RolloffFactor;                          % RRC filter roll-off factor
 NumTaps     = params.filter.NumFilterTaps;                          % Number of RRC filter taps
 
@@ -33,17 +46,10 @@ EbN0_step_dB        = params.simulation.EbN0_step_dB;               % Step size 
 iterations_per_EbN0 = params.simulation.iterations_per_EbN0;        % Iterations for averaging BER at each Eb/N0 point
 EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of Eb/N0 values to simulate (dB)
 num_EbN0_points     = length(EbN0_domain_dB);                       % Number of points on the BER curve
-
 displayParameters(params);
 
-% ---- CFO and sample time offset Parameters ----
-Fc = 600e6;                                     % Carrier frequency in Hz
-delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-phi_0           = 0;                      % Phase offset in rad
-sample_time_offset = 0;                      % Sample offset (0 samples)
-
 % --- Pre-allocate results array ---
-ber_data = zeros(num_EbN0_points, 1);                     % Stores simulated BER for each Eb/N0 point
+ber_data = zeros(1, num_EbN0_points);                               % Stores simulated BER for each Eb/N0 point
 
 fprintf('\n\n========================================');
 fprintf('\n    BER Curve Simulation Setup         ');
@@ -79,34 +85,30 @@ for idx_EbN0 = 1:num_EbN0_points
     EbN0dB = EbN0_domain_dB(idx_EbN0);                              % Current Eb/N0 value in dB for this outer loop iteration
 
     % -------- 0. Transmitter Processing (Data Generation Once Per Eb/N0 Point) --------
-    bit_tx      = randi([0, 1], 1, NumBits)';                        % Generate random source bits for this Eb/N0 point
+    bit_tx      = randi([0, 1], 1, NumBits);                        % Generate random source bits for this Eb/N0 point
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
     symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
     signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
     signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
+
     total_bit_errors_point = 0;                                     % Reset error counter for this Eb/N0 point
     total_bits_sim_point = 0;                                       % Reset bit counter for this Eb/N0 point
-    time_vector = (0 : length(signal_tx) - 1)' * Ts;
-    time_vector_symb = (0 : length(symb_tx) - 1)' * Tsymb;
 
     % --- Inner Loop for Averaging ---
     % Run multiple iterations using the SAME transmitted signal (signal_tx)
     % but adding a DIFFERENT random noise instance each time.
     % This allows for averaging the BER over multiple noise realizations to have a more accurate estimate of the BER.
-    
     for iter = 1:iterations_per_EbN0
 
         % -------- 1. AWGN Channel --------
         signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
-        signal_tx_offset = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo_ppm * time_vector + phi_0));
-
 
         % -------- 2. Receiver Chain --------
-        signal_rx = applyFilter(signal_tx_offset, h_rrc, NumTaps);   % Apply matched filter (same RRC filter)
-        symb_rx = downSampler(signal_rx, OSF);                       % Downsample to symbol rate, transpose back
-        symb_rx = symb_rx .* exp(-1j * (2 * pi * delta_cfo_ppm * time_vector_symb));    % Compensate for CFO and phase offset
-        bit_rx = demapping(symb_rx, Nbps, ModType);                                             % Demap received symbols to bits
+        signal_rx_filtered = applyFilter(signal_tx_noisy, h_rrc, NumTaps);  % Apply matched filter (same RRC filter)
+        symb_rx = downSampler(signal_rx_filtered, OSF).';                   % Downsample to symbol rate, transpose back
+        bit_rx = demapping_v2(symb_rx, Nbps, ModType);                         % Demap received symbols to bits
+        bit_rx = bit_rx(:).';                                               % Ensure bit_rx is a row vector
 
         % -------- 3. Calculate Errors for this iteration --------
         num_errors_iter = sum(bit_tx ~= bit_rx);                            % Compare transmitted and received bits to count errors
@@ -118,7 +120,7 @@ for idx_EbN0 = 1:num_EbN0_points
     end
 
     % -------- Calculate Average BER for this EbN0 point --------
-    ber_data(idx_EbN0) = total_bit_errors_point / total_bits_sim_point;     % Calculate and store the average BER
+    ber_data(idx_EbN0) = total_bit_errors_point / total_bits_sim_point; % Calculate and store the average BER
 
     % Print results for the each Eb/N0 point
     fprintf('\n  Eb/N0 = %5.1f dB :  Eb = %.2e,   Total Bits = %8d,   Total Errors = %6d,  Avg BER = %.3e', ...
@@ -133,14 +135,12 @@ fprintf('\nEb/N0 Loop Complete.');
 fprintf('\n========================================');
 
 
-%% ====================== Generate Plots  =======================
+%% ========================================== Plotting Results ==========================================
+fprintf('\n\n========================================');
+fprintf('\nPlotting BER Curve...');
+fprintf('\n========================================');
+
 plotBERCurve(ber_data, params);
-bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 fprintf('\n\n========================================');
 fprintf('\nPlotting complete.');

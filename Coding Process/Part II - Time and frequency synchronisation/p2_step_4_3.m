@@ -38,18 +38,25 @@ displayParameters(params);
 
 % ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                                     % Carrier frequency in Hz
-delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-phi_0           = 0;                      % Phase offset in rad
+ppm = 1;
+delta_cfo = ppm * 1e-6 * Fc;           
+phi_0  = 0;                         % Phase offset in rad
 sample_time_offset = 0;                      % Sample offset (0 samples)
+
+
+% ---- Data Segmentation Parameters ----
+pilot_position = 50;
+pilot_size = 20;
+averaging_window = 8; % Number of symbols to average over for CFO estimation
+
 
 % --- Pre-allocate results array ---
 ber_data = zeros(num_EbN0_points, 1);                     % Stores simulated BER for each Eb/N0 point
-
 fprintf('\n\n========================================');
 fprintf('\n    BER Curve Simulation Setup         ');
 fprintf('\n========================================');
 fprintf('\n Modulation       : %d-%s', ModOrder, upper(ModType));
-fprintf('\n Eb/N0 Range      : %.1f dB to %.1f dB (Step: %.1f dB)', EbN0_min_dB, EbN0_max_dB, EbN0_step_dB);
+fprintf('\n Eb/N0 Range      : %.1f dB to %.1f dB (Step: %.1f dB).', EbN0_min_dB, EbN0_max_dB, EbN0_step_dB);
 fprintf('\n Bits per Tx Block: %d', NumBits);
 fprintf('\n Iterations       : %d', iterations_per_EbN0);
 fprintf('\n Total Bits       : %d', NumBits * iterations_per_EbN0);
@@ -79,16 +86,18 @@ for idx_EbN0 = 1:num_EbN0_points
     EbN0dB = EbN0_domain_dB(idx_EbN0);                              % Current Eb/N0 value in dB for this outer loop iteration
 
     % -------- 0. Transmitter Processing (Data Generation Once Per Eb/N0 Point) --------
-    bit_tx      = randi([0, 1], 1, NumBits)';                        % Generate random source bits for this Eb/N0 point
+    bit_tx      = randi([0, 1], 1, NumBits).';                        % Generate random source bits for this Eb/N0 point
     symb_tx     = mapping(bit_tx, Nbps, ModType);                   % Map bits to complex symbols
-    symb_tx_up  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
-    signal_tx   = applyFilter(symb_tx_up, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
-    signalPower = mean(abs(signal_tx).^2);                          % Average Power of baseband signal after pulse shaping
+    unuseful    = symb_tx(1 : pilot_position - 1);
+    pilot       = symb_tx(pilot_position : pilot_position + pilot_size - 1);
+    signal_tx  = upSampler(symb_tx, OSF).';                        % Upsample by inserting zeros, transpose for filter function
+    signal_tx_filtered   = applyFilter(signal_tx, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
+    signalPower = mean(abs(signal_tx_filtered).^2);                          % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                     % Energy per bit Eb = P_avg / R_bit
     total_bit_errors_point = 0;                                     % Reset error counter for this Eb/N0 point
     total_bits_sim_point = 0;                                       % Reset bit counter for this Eb/N0 point
-    time_vector = (0 : length(signal_tx) - 1)' * Ts;
-    time_vector_symb = (0 : length(symb_tx) - 1)' * Tsymb;
+    time_vector = (0 : length(signal_tx_filtered) - 1).' * Ts;
+    time_vector_symb = (0 : length(symb_tx) - 1).' * Tsymb;
 
     % --- Inner Loop for Averaging ---
     % Run multiple iterations using the SAME transmitted signal (signal_tx)
@@ -98,14 +107,15 @@ for idx_EbN0 = 1:num_EbN0_points
     for iter = 1:iterations_per_EbN0
 
         % -------- 1. AWGN Channel --------
-        signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
-        signal_tx_offset = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo_ppm * time_vector + phi_0));
+        signal_tx_noisy = addAWGN(signal_tx_filtered, Eb, EbN0dB, OSF, SymRate);     % Add Additive White Gaussian Noise based on defined Eb and EbN0dB
+        signal_tx_offset = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
 
 
         % -------- 2. Receiver Chain --------
-        signal_rx = applyFilter(signal_tx_offset, h_rrc, NumTaps);   % Apply matched filter (same RRC filter)
-        symb_rx = downSampler(signal_rx, OSF);                       % Downsample to symbol rate, transpose back
-        symb_rx = symb_rx .* exp(-1j * (2 * pi * delta_cfo_ppm * time_vector_symb));    % Compensate for CFO and phase offset
+        signal_rx_matched_filtered = applyFilter(signal_tx_offset, h_rrc, NumTaps);   % Apply matched filter (same RRC filter)
+        symb_rx = downSampler(signal_rx_matched_filtered, OSF);                       % Downsample to symbol rate, transpose back
+        [toa, cfo_hat] = frameFreqAcquisition(pilot, symb_rx, averaging_window, Tsymb);
+        symb_rx = symb_rx .* exp(-1j * (2 * pi * cfo_hat * time_vector_symb));    % Compensate for CFO and phase offset
         bit_rx = demapping(symb_rx, Nbps, ModType);                                             % Demap received symbols to bits
 
         % -------- 3. Calculate Errors for this iteration --------
@@ -139,8 +149,8 @@ bits_to_plot = min(params.timing.NumBits, 100 * Nbps);
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
 plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
+plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 
 fprintf('\n\n========================================');
 fprintf('\nPlotting complete.');

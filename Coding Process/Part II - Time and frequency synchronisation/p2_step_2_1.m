@@ -31,15 +31,14 @@ displayParameters(params);
 
 % ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
-delta_cfo_ppm   = 0 * 1e-6 * Fc;           % Frequency offset in Hz (1 ppm)
-delta_omega     = 2 * pi * delta_cfo_ppm;   % Frequency offset in rad/s
-phi_0           = pi/8;                        % Phase offset in rad
-sample_time_offset = 500;                      % Sample offset (0 samples)
+delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
+phi_0           = 0;                     % Phase offset in rad
+sample_time_offset = 500;                   % Sample offset (0 samples)
 
 
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
-bit_tx      = randi([0, 1], 1, NumBits).';
+bit_tx      = randi([0, 1], 1, NumBits)';
 symb_tx     = mapping(bit_tx, Nbps, ModType);
 symb_tx_up  = upSampler(symb_tx, OSF).';
 h_rrc       = rrcFilter(Beta, SymRate, OSF, NumTaps);
@@ -52,17 +51,16 @@ EbN0dB = 1000;
 signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
 
 % --- Introduce CFO, phase offset and sample time offset ---
-num_samples_tx  = length(signal_tx_noisy);                          % Number of samples in the transmitted signal
-time_vector     = (0 : num_samples_tx - 1).' * Ts;                  % The TA insisted on this
-offset_signal   = exp(1j * (delta_omega * time_vector + phi_0));    % Create the offset signal
-signal_tx_offset   = signal_tx_noisy .* offset_signal;              % Apply CFO to the transmitted signal
+time_vector = (0 : length(signal_tx) - 1)' * Ts;                  % The TA insisted on this
+signal_tx_offset  = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo_ppm * time_vector + phi_0));   % Apply CFO to the transmitted signal
+
 
 % --- Receiver Chain ---
-signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);
-signal_tx_offset(1:sample_time_offset) = 0;                         % Time shift (sample_shift samples)
-symb_rx    = downSampler(signal_rx, OSF).';
+signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);                % Apply Matched Filter
+symb_rx    = downSampler(signal_rx, OSF);
+time_vector_symb = (0 : length(symb_rx) - 1)' * Tsymb;
+symb_rx = symb_rx .* exp(-1j * (2 * pi * delta_cfo_ppm * time_vector_symb + phi_0));  % Compensate for CFO and phase offset
 bit_rx     = demapping(symb_rx, Nbps, ModType); 
-bit_rx     = bit_rx(:).';  
 
 
 %% ====================== Generate Plots  =======================
