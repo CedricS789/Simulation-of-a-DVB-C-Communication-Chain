@@ -36,7 +36,7 @@ function params = initParameters(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 201;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps = 301;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
 
