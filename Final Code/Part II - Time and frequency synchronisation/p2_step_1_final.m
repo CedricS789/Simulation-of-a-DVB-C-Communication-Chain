@@ -1,11 +1,12 @@
-%% =================== Step 2_1 - Assessing the Impact of Synchronization Errors - CFO, Phase Offset and Sample Time Offset ===================
+%% =================== Step 1_1_final - Assessing the Impact of Synchronization Errors - CFO and Phase Offset ===================
 %   Introduce Errors: The synchronization errors affect the signal as it's received,    
 %   before any receiver processing. So, the point to introduce these errors mathematically  
 %   is after the transmitter's pulse shaping (signal_tx)     
 %   and before the receiver's matched filter (signal_rx)
 %
-%   Chain: Bits -> Map -> Upsample -> h_rrc filter-> signal_tx -> Add AWGN -> Apply Sync Errors -> signal_rx_filtered -> ...
+%   Chain: Bits -> Map -> Upsample -> h_rrc filter-> signal_tx -> Apply Sync Errors -> Add AWGN -> signal_rx_filtered -> ...
 %   
+%   This code introduce a simple single CFO error to the transmitted signal, and plot of the constellation diagram
 % =================================================================================================================================
 
 clear; close all; clc;
@@ -14,13 +15,12 @@ addpath('p2_functions')
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps    = 2;
-params  = initParameters_2(Nbps);
+params  = initParameters(Nbps);
 NumBits = params.timing.NumBits;
 ModType = params.modulation.ModulationType;
 ModOrder= params.modulation.ModulationOrder;
 OSF     = params.sampling.OversamplingFactor;
 SymRate = params.timing.SymbolRate;
-Tsymb   = params.timing.SymbolPeriod;
 BitRate = params.timing.BitRate;
 Fs      = params.sampling.SamplingFrequency;
 Ts      = params.sampling.SamplePeriod;
@@ -29,16 +29,16 @@ NumTaps = params.filter.NumFilterTaps;
 iterations = params.simulation.iterations_per_EbN0;
 displayParameters(params);
 
-% ---- CFO and sample time offset Parameters ----
+% ---- CFO Parameters ----
 Fc = 600e6;                                 % Carrier frequency in Hz
 delta_cfo_ppm   = 1 * 1e-6 * Fc;            % Frequency offset in Hz (1 ppm)
-phi_0           = 0;                     % Phase offset in rad
-sample_time_offset = 500;                   % Sample offset (0 samples)
+delta_omega     = 2 * pi * delta_cfo_ppm;    % Frequency offset in rad/s
+phi_0           = 0;                        % Phase offset in rad
 
 
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
-bit_tx      = randi([0, 1], 1, NumBits)';
+bit_tx      = randi([0, 1], 1, NumBits).';
 symb_tx     = mapping(bit_tx, Nbps, ModType);
 symb_tx_up  = upSampler(symb_tx, OSF).';
 h_rrc       = rrcFilter(Beta, SymRate, OSF, NumTaps);
@@ -47,20 +47,20 @@ signalPower_tx  = mean(abs(signal_tx).^2);
 Eb              = signalPower_tx / BitRate;
 
 % -- Introduce Noise --
-EbN0dB = 1000;
+EbN0dB     = 1000;                                                % Very Low Noise
 signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
 
-% --- Introduce CFO, phase offset and sample time offset ---
-time_vector = (0 : length(signal_tx) - 1)' * Ts;                  % The TA insisted on this
-signal_tx_offset  = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo_ppm * time_vector + phi_0));   % Apply CFO to the transmitted signal
-
+% --- Introduce CFO and phase offset ---
+num_samples_tx  = length(signal_tx_noisy);                        % Number of samples in the transmitted signal
+time_vector     = (0 : num_samples_tx - 1).' * Ts;                % The TA insisted on this
+offset_signal   = exp(1j * (delta_omega * time_vector + phi_0));  % Create the offset signal
+signal_tx_offset   = signal_tx_noisy .* offset_signal;            % Apply CFO to the transmitted signal
 
 % --- Receiver Chain ---
-signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);                % Apply Matched Filter
-symb_rx    = downSampler(signal_rx, OSF);
-time_vector_symb = (0 : length(symb_rx) - 1)' * Tsymb;
-symb_rx = symb_rx .* exp(-1j * (2 * pi * delta_cfo_ppm * time_vector_symb + phi_0));  % Compensate for CFO and phase offset
+signal_rx  = applyFilter(signal_tx_offset, h_rrc, NumTaps);
+symb_rx    = downSampler(signal_rx, OSF).';
 bit_rx     = demapping(symb_rx, Nbps, ModType); 
+bit_rx     = bit_rx(:).';  
 
 
 %% ====================== Generate Plots  =======================

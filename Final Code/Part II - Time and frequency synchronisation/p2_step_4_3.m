@@ -11,7 +11,7 @@ addpath('p2_functions');
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 2;                                                           % Number of bits per symbol (2^Nbps = ModOrder)
-params = initParameters_2(Nbps);                                    % Initialize fixed parameters from external function
+params = initParameters(Nbps);                                    % Initialize fixed parameters from external function
 
 % --- Extract parameters needed ---
 NumBits     = params.timing.NumBits;                                % Bits per Tx block (frame)

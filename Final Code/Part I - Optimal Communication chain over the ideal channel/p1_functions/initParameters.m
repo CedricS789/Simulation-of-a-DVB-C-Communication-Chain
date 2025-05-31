@@ -25,7 +25,8 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^9;                           % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^8;                          % Total data bits (multiple of Nbps)
+        params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
         params.timing.BitRate = params.timing.SymbolRate * params.modulation.Nbps;      % Rb [bps]
@@ -50,14 +51,13 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == BER Curve Simulation Parameters ==
         % =====================================================================
-        params.simulation.EbN0_min_dB = -5;                      % Start Eb/N0 [dB]
-        params.simulation.EbN0_max_dB = 15;                      % End Eb/N0 [dB]
-        params.simulation.EbN0_step_dB = 1;                      % Step size Eb/N0 [dB]
-        params.simulation.iterations_per_EbN0 = 1;               % Averaging iterations per point
+        params.simulation.EbN0_min_dB = 0;                     % Start Eb/N0 [dB]
+        params.simulation.EbN0_max_dB = 20;                    % End Eb/N0 [dB]
+        params.simulation.EbN0_step_dB = 1;                    % Step size Eb/N0 [dB]
+        params.simulation.iterations_per_EbN0 = 30;            % Averaging iterations per point
         
-        EbN0_min_dB                         = params.simulation.EbN0_min_dB;                % Minimum Eb/N0 value in dB
-        EbN0_max_dB                         = params.simulation.EbN0_max_dB;                % Maximum Eb/N0 value in dB
-        EbN0_step_dB                        = params.simulation.EbN0_step_dB;               % Step size for Eb/N0 sweep in dB
-        params.simulation.EbN0_domain_dB    = EbN0_min_dB:EbN0_step_dB:EbN0_max_dB;         % Range of Eb/N0 values to simulate (dB)
-
+        min = params.simulation.EbN0_min_dB;                   % Minimum Eb/N0 value in dB
+        max = params.simulation.EbN0_max_dB;                   % Maximum Eb/N0 value in dB
+        iter = params.simulation.EbN0_step_dB;                 % Step size for Eb/N0 sweep in dB
+        params.simulation.EbN0_domain_dB = (min:iter:max)';    % Range of Eb/N0 values to simulate (dB)
 end

@@ -1,4 +1,6 @@
 \section{Optimal Communication Chain over the Ideal Channel}
+\textcolor{red}{[TODO: ADD MORE MATH LATER]}\par
+\textcolor{red}{[TODO: MAYBE ADD HOW SOME SIMULATION PARAMETERS AFFECT THE SIMULATION (like taps for example)]}\\
 \subsection{Communication Chain}
 \begin{figure}[H]
 	\centering
@@ -35,18 +37,18 @@ After mapping the bit-stream into symbols, the sequence of complex symbols $I[n]
 	\item To control the interference between successive symbols
 \end{enumerate}
 \subsubsection{Half-Root Nyquist Filter Design and Matched Filtering}
-To achieve optimal performance in terms of ISI cancellation and maximizing the SNR at the receiver, a root-raised cosine filter is used. This filter ensures that the overall desired channel response $h(t)$, from the input symbols at the transmitter to the sampled symbols at the receiver, satisfies the Nyquist criterion for zero ISI. This criterion states that the normalized impulse response of the equivalent discrete-time channel $h(nT_{symb})$  is such that
+To achieve optimal performance in terms of ISI cancellation and maximizing the SNR at the receiver, a root-raised cosine filter was used. This filter ensures that the overall desired channel response $h(t)$, from the input symbols at the transmitter to the sampled symbols at the receiver, satisfies the Nyquist criterion for zero ISI. This criterion states that the normalized impulse response of the equivalent discrete-time channel $h(kT_{symb})$  is such that
 \begin{equation}
-	h(nT_{symb}) = \begin{cases}
-		1 & n=0 \\
-		0 & n \neq 0
+	h(kT_{symb}) = \begin{cases}
+		1 & k=0 \\
+		0 & k \neq 0
 	\end{cases}
 \end{equation}
 
-The filtering is split between a root-raised cosine (RRC) pulse shaping filter $g(t)$ at the transmitter and its matched version $g^*(-t)$ at the receiver. The convolution in the time domain of these two filters, $h(t) = g(t) \otimes g^*(-t)$, forms the overall channel response that satisfies the Nyquist criterion for zero ISI.
-To design the root-raised cosine filter $g(t)$, the transfer function of the raised cosine filter $H(f)$ is first defined. A square root is then performed on $H(f)$ to find the frequency response of the RRC filter, $G(f) = \sqrt{H(f)}$. Afterwards, an inverse Fourier transform is computed to find its time-domain equivalent $g(t)$.\\
+The filtering is split between a root-raised cosine (RRC) filter $g(t)$ at the transmitter and its matched version $g^*(-t)$ at the receiver. The convolution in the time domain of these two filters, $h(t) = g(t) \otimes g^*(-t)$, forms the overall channel response that satisfies the Nyquist criterion for zero ISI.
+To design the root-raised cosine filter $g(t)$, the transfer function of the raised cosine filter $H(f)$ was first defined. A square root was then performed on $H(f)$ to find the frequency response of the RRC filter, $G(f) = \sqrt{H(f)}$. Afterwards, an inverse Fourier transform was computed to find its time-domain equivalent $g(t)$.\\
 
-The frequency response of the raised cosine filter $H(f)$ is equivalent to a rectangular window, but with a slope that is less sharp and characterized by a roll-off factor $\beta = 0.2$. Thus its frequency response is given by:
+The frequency response of the raised cosine filter $H(f)$ is almost equivalent to a rectangular window, but with a slope that is less sharp and characterized by a roll-off factor $\beta = 0.2$. Hence the frequency response of an RC filter is given by:
 
 \begin{equation}
 	H(f) = \begin{cases}
@@ -56,23 +58,29 @@ The frequency response of the raised cosine filter $H(f)$ is equivalent to a rec
 	\end{cases}
 \end{equation}
 
-When the time domain impulse response of the raised-cosine filter is sampled at the symbol rate, it is equivalent to a dirac pulse.
+
+
+\subsubsection{Filter Properties and Inter Symbol Interference Cancellation}
+The raised-cosine filter effectively confines the signal energy within a well-defined bandwidth, which is determined by the symbol rate $R_{symb} = 1/T_{symb}$ and the roll-off factor $\beta$. The total bandwidth occupied is $B = R_{symb} (1+\beta)/2$. Figure \ref{fig:h-rc-freq} illustrates the frequency response of the raised-cosine filter $H(f)$. It clearly shows a flat passband region, a roll-off region, and a stopband where the response is zero, thus restricting the signal to its allocated spectrum. For the project parameters with a roll-off factor of 0.2, the communication bandwidth is $B = 0.6 R_{symb}$
+
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{Images/h-rc-freq}
-	\caption{Frequency Response Raised Cosine Filter}
+	\includegraphics[width=0.9\linewidth]{Images/h-rc-freq}
+	\caption{Raised Cosine Filter Frequency Response  ($\beta = 0.2$, $taps = 301$, $OSF = 8$)}
 	\label{fig:h-rc-freq}
 \end{figure}
+
+When the time domain impulse response of the raised-cosine filter is sampled at the symbol rate, it behaves like Dirac's delta pulse.. As shown in Figure \ref{fig:h-rc} by stems representing $h(kT_{sym})$, the normalized RC filter response is unity at $t=0$ and zero at $t = \pm T_{sym}, \pm 2T_{sym}, \dots$. This ensures that at the optimal sampling instant for a given symbol, the contributions from all preceding and succeeding symbols are nullified, thus eliminating ISI.
+
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth]{Images/h-rc}
-	\caption{Raised Cosine Filter Temporal Response}
+	\includegraphics[width=0.9\linewidth]{Images/h-rc}
+	\caption{Normalized RC and RCC filter Impulse Responses}
 	\label{fig:h-rc}
 \end{figure}
 
 
-
-
-\subsubsection{Filter Properties and Inter Symbol Interference Cancellation}
 \subsection{Noise Addition and Performance Evaluation}
+\textcolor{red}{[LATER]}
 \subsection{Questions and Answers}
+\textcolor{red}{[LATER]}

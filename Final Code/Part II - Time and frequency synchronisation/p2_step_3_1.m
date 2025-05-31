@@ -10,7 +10,7 @@ addpath('p2_functions')
 
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps    = 4;
-params  = initParameters_2(Nbps);
+params  = initParameters(Nbps);
 NumBits = params.timing.NumBits;
 ModType = params.modulation.ModulationType;
 ModOrder= params.modulation.ModulationOrder;

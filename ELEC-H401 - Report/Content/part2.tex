@@ -1,5 +1,15 @@
 \section{Time and Frequency Synchronization}
 \subsection{The Problem of Synchronization}
+It is extremely important that the transmitter and receiver are synchronized in order for the demodulation to be accurate. The receiver must precisely determine when to sample the incoming complex signal to capture the symbol values and align its local carier frequency and phase with that of the received signal. \par
+Physically, syncronization errors occur when the transmitter and receiver operate with independent local oscillator. The local oscillators can be subject ti manufacturing imperfection, environmental variation, leading to slight deviations from their target frequencies. Furthermore, the propagation delay of the signal between the transmitter and the receiver introduces an unknown phase shift in the carrier and an unknown time shift in the symbol sequence arrival.\par
+These phenomena give rise to four primary types of synchronization errors, which can be categorized into carrier synchronization errors and timing synchronization errors.
+\begin{itemize}
+	\item Carrier Frequency Offset (CFO) $\Delta_f$: which is the difference in carrier frequency between the transmitted symbols and the received symbols
+	\item Carrier Phase Offset $\phi_0$: phase difference between the transmitted symbols and the received symbols
+	\item Sample Clock Offset (SCO) $\delta$: this error occurs when the frequency of the clock driving the Analog-to-Digital Converter at the receiver differs from that of the Digital-to-Analog Converter at the transmitter. This error type was not implemented in the project and was considered negligible.
+	\item Time shift $t_0$: represents the receiver's uncertainty about the exact time of arrival of the symbols. The receiver needs to determine the optimal sampling instants, which correspond to the peaks of the Nyquist-filtered pulses.
+\end{itemize}
+
 \subsection{Impact of Synchronization Errors on Performance}
 \subsection{Gardner Algorithm for Sampling Time Tracking}
 \subsection{Frame and Frequency Acquisition using Differential Cross-Correlator}
