@@ -14,7 +14,7 @@ addpath('../Part I - Optimal Communication chain over the ideal channel/p1_funct
 addpath('p2_functions')
 
 %% ========================================== Load Simulation Parameters  ==========================================
-Nbps    = 2;
+Nbps    = 4;
 params  = initParameters(Nbps);
 NumBits = params.timing.NumBits;
 ModType = params.modulation.ModulationType;
@@ -66,7 +66,7 @@ bit_rx     = bit_rx(:).';
 %% ====================== Generate Plots  =======================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+% plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+% plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+% plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+% plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);

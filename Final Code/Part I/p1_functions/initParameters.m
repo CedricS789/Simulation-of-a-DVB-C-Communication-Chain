@@ -1,13 +1,13 @@
 function params = initParameters(Nbps)
-    %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
-    %   Sets up modulation, timing, filter, sampling, and simulation settings.
-    %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
-    %   
-    %   Inputs:
-    %       Nbps - Number of bits per symbol (k) for modulation.
-    %       Nbps = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
-    %   Outputs:
-    %       params - Struct containing all parameters for the modulation scheme (Nbps).
+        %   Creates struct with all simulation parameters based on the desired modulation scheme (Number of bits per symbol).
+        %   Sets up modulation, timing, filter, sampling, and simulation settings.
+        %   Calculates derived parameters such as symbol rate, bit rate, and bandwidth etc.
+        %   
+        %   Inputs:
+        %       Nbps - Number of bits per symbol (k) for modulation.
+        %       Nbps = 1 for PAM (k=1), 2 for QPSK (k=2), 3 for 8-PSK (k=3), etc.
+        %   Outputs:
+        %       params - Struct containing all parameters for the modulation scheme (Nbps).
 
         % =====================================================================
         % == Modulation Parameters ==
@@ -39,7 +39,6 @@ function params = initParameters(Nbps)
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
         params.filter.NumFilterTaps = 301;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
-
 
         % =====================================================================
         % == Sampling Parameters ==

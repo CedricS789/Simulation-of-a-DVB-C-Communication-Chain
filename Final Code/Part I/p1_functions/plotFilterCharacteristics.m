@@ -19,7 +19,7 @@ function hFig = plotFilterCharacteristics(h_rrc, Beta, Fs, OSF)
     % ---- Subplot 1: RRC Impulse Response ----
     subplot(3, 1, 1);
     time_axis_us = (-(NumFilterTaps-1)/2 : (NumFilterTaps-1)/2) * Ts * 1e6; % Convert to μs
-    stem(time_axis_us, h_rrc, 'filled', 'MarkerSize', 4);
+    plot(time_axis_us, h_rrc, 'MarkerSize', 4, 'Marker', 'o');
     grid on; box on;
     xlabel('Time (\mus)');
     ylabel('Amplitude');
