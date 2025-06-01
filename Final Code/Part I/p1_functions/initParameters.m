@@ -9,11 +9,13 @@ function params = initParameters(Nbps)
         %   Outputs:
         %       params - Struct containing all parameters for the modulation scheme (Nbps).
 
+
+
         % =====================================================================
         % == Modulation Parameters ==
         % =====================================================================
-        params.modulation.Nbps = Nbps;                            % Bits per symbol (k)
-        params.modulation.ModulationOrder = 2^params.modulation.Nbps;   % M = 2^k
+        params.modulation.Nbps = Nbps;                                              % Bits per symbol (k)
+        params.modulation.ModulationOrder = 2^params.modulation.Nbps;               % M = 2^k
 
         % Determine Modulation Type based on Nbps (PAM for k=1 or odd, QAM for even k>=2)
         if params.modulation.Nbps == 1 || mod(params.modulation.Nbps, 2) ~= 0       % if Npbs is odd then PAM
@@ -25,7 +27,7 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^15;                          % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^8;                          % Total data bits (multiple of Nbps)
         params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
@@ -43,14 +45,14 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Sampling Parameters ==
         % =====================================================================
-        params.sampling.OversamplingFactor = 20;                                                             % Samples per symbol (OSF >= 2)
+        params.sampling.OversamplingFactor = 8;                                                            % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
 
         % =====================================================================
         % == BER Curve Simulation Parameters ==
         % =====================================================================
-        params.simulation.EbN0_min_dB = -10;                     % Start Eb/N0 [dB]
+        params.simulation.EbN0_min_dB = -20;                   % Start Eb/N0 [dB]
         params.simulation.EbN0_max_dB = 13;                    % End Eb/N0 [dB]
         params.simulation.EbN0_step_dB = 1;                    % Step size Eb/N0 [dB]
         params.simulation.iterations_per_EbN0 = 50;            % Averaging iterations per point

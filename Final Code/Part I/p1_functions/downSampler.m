@@ -9,6 +9,6 @@ function out = downSampler(in, OSF)
     %   Output:
     %       out - Downsampled output row vector (length = floor(length(in) / OSF)).
 
-    % Select samples at indices OSF, 2*OSF, 3*OSF, ... up to the input length
-    out = in(OSF:OSF:end);
+        % Select samples at indices OSF, 2*OSF, 3*OSF, ... up to the input length
+        out = in(OSF:OSF:end);
 end

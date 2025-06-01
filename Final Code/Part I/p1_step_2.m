@@ -4,7 +4,7 @@ addpath('p1_functions');
 
 
 %% =================== Load Simulation Parameters  ===================
-Nbps = 4;
+Nbps = 6;
 params = initParameters(Nbps);
 displayParameters(params);
 NumBits = params.timing.NumBits;
@@ -25,9 +25,9 @@ iterations = params.simulation.iterations_per_EbN0;
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
-symb_tx_up = upSampler(symb_tx, OSF).';
+symb_tx = upSampler(symb_tx, OSF).';
 h_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx = applyFilter(symb_tx_up, h_rrc, NumTaps);
+signal_tx = applyFilter(symb_tx, h_rrc, NumTaps);
 signalPower_tx = mean(abs(signal_tx).^2);
 Eb = signalPower_tx / BitRate;
 
@@ -37,9 +37,9 @@ signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
 
 % --- Receiver Chain ---
 signal_rx = applyFilter(signal_tx_noisy, h_rrc, NumTaps);
-symb_rx = downSampler(signal_rx, OSF).';
+symb_rx = downSampler(signal_rx, OSF);
 bit_rx = demapping(symb_rx, Nbps, ModType); 
-bit_rx = bit_rx(:).';  
+bit_rx = bit_rx(:);  
 
 
 %% =================== Generate Plots  ===================
