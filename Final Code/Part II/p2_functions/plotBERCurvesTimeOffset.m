@@ -36,10 +36,10 @@ function hFig = plotBERCurvesTimeOffset(all_ber_data, params, time_offset_norm_v
     
     grid(ax, 'on');
     xlabel(ax, '$E_b/N_0$ (dB)', 'Interpreter', 'latex', 'FontSize', 30);
-    ylabel(ax, 'Bit Error Rate (BER)', 'Interpreter', 'latex', 'FontSize', 30);
+    ylabel(ax, 'Bit Error Rate', 'Interpreter', 'latex', 'FontSize', 30);
     titleStr = sprintf('BER vs. $E_b/N_0$ ($%d$-%s)', ModOrder, upper(ModType));
     title(ax, titleStr, 'Interpreter', 'latex', 'FontSize', 30);
-    legend(ax, 'show', 'Location', 'southwest', 'Interpreter', 'latex', 'FontSize', 20);
+    legend(ax, 'show', 'Location', 'southwest', 'Interpreter', 'latex', 'FontSize', 30);
     
     ylim(ax, [1e-5 1]);
     xlim(ax, [min(EbN0_domain_dB) max(EbN0_domain_dB)]);
@@ -47,7 +47,8 @@ function hFig = plotBERCurvesTimeOffset(all_ber_data, params, time_offset_norm_v
     set(ax, 'YScale', 'log');
     ax.FontSize = 30;
     ax.TickLabelInterpreter = 'latex';
-    ax.GridAlphaMode = 'manual'; 
-    ax.GridAlpha = 0.6; 
+    ax.GridColor = [0.3 0.3 0.3];
+    ax.GridAlpha = 0.7;
     hold(ax, 'off');
+    box on;
 end

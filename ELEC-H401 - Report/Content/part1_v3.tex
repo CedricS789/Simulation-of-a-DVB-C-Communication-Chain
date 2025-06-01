@@ -51,21 +51,21 @@ The design process for the RRC filter $g(t)$ in this work began with defining th
 \end{equation}
 
 \subsubsection{Filter Properties and Inter-Symbol Interference Cancellation}
-The RC filter, formed by $g(t)$ and its matched pair, effectively confines the signal energy within a defined bandwidth $B = R_{symb} (1+\beta)/2$, where $R_{symb} = 1/T_{symb}$ is the symbol rate. The frequency response of the RC filter resulting from the implementation using Equation \ref{eq:rc_response_part1} is shown in Figure \ref{fig:h-rc-freq}. This plot confirms that the filter restricts the signal to its allocated spectrum, showing the  flat passband, a roll-off region, and a stopband. For the project parameters ($R_{symb} = !!!!!!!!!!$ and $\beta = 0.2$), the communication bandwidth is $B = 0.6 R_{symb}$.
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\linewidth]{Images/h-rc-freq} 
-	\caption{Raised Cosine Filter Frequency Response from simulation ($\beta = 0.2$, $taps = 301$, $OSF = 8$).}
+	\caption{Simulated Raised Cosine Filter Frequency Response from ($\beta = 0.2$, $taps = 301$, $OSF = 8$).}
 	\label{fig:h-rc-freq}
 \end{figure}
+The RC filter, formed by $g(t)$ and its matched pair, effectively confines the signal energy within a defined bandwidth $B = R_{symb} (1+\beta)/2$, where $R_{symb} = 1/T_{symb}$ is the symbol rate. The frequency response of the RC filter resulting from the implementation using Equation \ref{eq:rc_response_part1} is shown in Figure \ref{fig:h-rc-freq}. This plot confirms that the filter restricts the signal to its allocated spectrum, showing the  flat passband, a roll-off region, and a stopband. For the project parameters ($R_{symb} = !!!!!!!!!!$ and $\beta = 0.2$), the communication bandwidth is $B = 0.6 R_{symb}$.
+
 
 In the time domain, the overall RC filter $h(t) = g(t) \otimes g^*(-t)$ is designed such that when sampled at the symbol rate, its response approximates a Dirac delta function, thereby satisfying the Nyquist criterion for zero ISI (Equation \ref{eq:nyquist_criterion_part1}). Figure \ref{fig:h-rc} shows the impulse response $h(t)$ obtained in the simulation. The stems, representing $h(kT_{symb})$, demonstrate this property: the normalized response is unity at $t=0$ and zero at $t = \pm T_{symb}, \pm 2T_{symb}, \dots$. This result from the simulation confirms that the implemented filter structure successfully nullifies contributions from other symbols at the optimal sampling instant for a given symbol, thus eliminating ISI.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\linewidth]{Images/h-rc} 
-	\caption{Normalized RC and RRC filter Impulse Responses from simulation, with $h(kT_{symb})$ illustrating ISI cancellation.}
+	\caption{Simulated Normalized RC and RRC filter Impulse Responses, with $h(kT_{symb})$ illustrating ISI cancellation.}
 	\label{fig:h-rc}
 \end{figure}
 
@@ -144,6 +144,6 @@ The effect of AWGN on the received signal constellation, leading to the $y[k]$ v
         \caption{Simulated 16-QAM symbols after matched filtering and downsampling.}
         \label{fig:const-filtered-down_cont}
     \end{subfigure}
-    \caption{Simulation - Effect of AWGN and matched filtering on a 16-QAM constellation}
+    \caption{Simulation - Effect of AWGN and matched filtering on a 16-QAM constellation ($\frac{E_b}{N_0} = 15$ dB)}
     \label{fig:constellations-noise_cont}
 \end{figure}

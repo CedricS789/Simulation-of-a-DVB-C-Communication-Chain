@@ -49,5 +49,8 @@ function hFig = plotBERCurvesCFO(all_ber_data, params, ppm_values)
     
     ax.FontSize = 30;
     ax.TickLabelInterpreter = 'latex';
+    ax.GridColor = [0.3 0.3 0.3];
+    ax.GridAlpha = 0.7;
     hold(ax, 'off');
+    box on;
 end

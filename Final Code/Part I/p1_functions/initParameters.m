@@ -39,20 +39,20 @@ function params = initParameters(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 301;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps = 701;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
         % =====================================================================
         % == Sampling Parameters ==
         % =====================================================================
-        params.sampling.OversamplingFactor = 8;                                                            % Samples per symbol (OSF >= 2)
+        params.sampling.OversamplingFactor = 20;                                                            % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
 
         % =====================================================================
         % == BER Curve Simulation Parameters ==
         % =====================================================================
-        params.simulation.EbN0_min_dB = -20;                   % Start Eb/N0 [dB]
+        params.simulation.EbN0_min_dB = -15;                   % Start Eb/N0 [dB]
         params.simulation.EbN0_max_dB = 13;                    % End Eb/N0 [dB]
         params.simulation.EbN0_step_dB = 1;                    % Step size Eb/N0 [dB]
         params.simulation.iterations_per_EbN0 = 50;            % Averaging iterations per point
