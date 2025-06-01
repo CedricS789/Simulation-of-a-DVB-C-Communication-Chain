@@ -10,9 +10,9 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
     
     txColor = [0, 0.4470, 0.7410];
     rxColor = [0.8500, 0.3250, 0.0980];
-
-    scatter(ax, real(symb_rx), imag(symb_rx), 60, 'x', 'MarkerEdgeColor', rxColor, 'LineWidth', 1.5, 'DisplayName', '$\mathrm{Received}$');
-    scatter(ax, real(symb_tx), imag(symb_tx), 300, 'o', 'filled', 'MarkerFaceColor', txColor, 'MarkerEdgeColor', txColor, 'DisplayName', '$\mathrm{Transmitted}$');
+    
+    scatter(ax, real(symb_rx), imag(symb_rx), 60, 'x', 'MarkerEdgeColor', rxColor, 'LineWidth', 1.5, 'DisplayName', 'Received Symbols after CFO, Phase Offset, and time offset');
+    scatter(ax, real(symb_tx), imag(symb_tx), 300, 'o', 'filled', 'MarkerFaceColor', txColor, 'MarkerEdgeColor', txColor, 'DisplayName', 'Transmitted Symbols');
 
     all_vals_for_max_calc = [real(symb_tx(:)); real(symb_rx(:)); imag(symb_tx(:)); imag(symb_rx(:))];
     max_coord = max([0; abs(all_vals_for_max_calc)], [], 'omitnan');
@@ -29,7 +29,7 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
 
     xlabel(ax, '$\mathrm{In-Phase} \; (\mathrm{I})$', 'FontSize', 30);
     ylabel(ax, '$\mathrm{Quadrature} \; (\mathrm{Q})$', 'FontSize', 30);
-    title(ax, sprintf('$%s$: Transmitted vs. Received', modStr), 'FontSize', 30);
+    % title(ax, sprintf('$%s$: Transmitted vs. Received', modStr), 'FontSize', 30);
     
     grid(ax, 'on');
     grid(ax, 'minor');

@@ -19,7 +19,7 @@ function displayParameters(params)
     
     % Timing and Rate Parameters
     fprintf('\nTiming and Rate Parameters:\n');
-    fprintf('  Total number of bits : %d\n', params.timing.NumBits);
+    fprintf('  Number of Bits sent  : %d\n', params.timing.NumBits);
     fprintf('  Symbol rate          : %.2f MHz\n', params.timing.SymbolRate/1e6);
     fprintf('  Symbol period        : %.2e s\n', params.timing.SymbolPeriod);
     fprintf('  Bit rate             : %.2f bps\n', params.timing.BitRate);
@@ -40,7 +40,7 @@ function displayParameters(params)
     
     % BER Curve Simulation Parameters
     fprintf('\nBER Curve Simulation Parameters:\n');
-    fprintf('  Eb/N0 range          : [%g dB to %g dB] with step %g dB\n', ...
+    fprintf('  Eb/N0 range          : [%g dB to %g dB] with step = %.1f dB\n', ...
             params.simulation.EbN0_min_dB, params.simulation.EbN0_max_dB, params.simulation.EbN0_step_dB);
     fprintf('  Eb/N0 values         : ');
     fprintf('%g ', params.simulation.EbN0_domain_dB);
