@@ -14,27 +14,19 @@ function hFig = plotConstellation_Tx_Rx(ModulationOrder, ModulationType, symb_tx
     scatter(ax, real(symb_rx), imag(symb_rx), 60, 'x', 'MarkerEdgeColor', rxColor, 'LineWidth', 1.5, 'DisplayName', 'Received Symbols');
     scatter(ax, real(symb_tx), imag(symb_tx), 300, 'o', 'filled', 'MarkerFaceColor', txColor, 'MarkerEdgeColor', txColor, 'DisplayName', 'Transmitted Symbols');
 
-    all_vals_for_max_calc = [real(symb_tx(:)); real(symb_rx(:)); imag(symb_tx(:)); imag(symb_rx(:))];
-    max_coord = max([0; abs(all_vals_for_max_calc)], [], 'omitnan');
-    
-    lim_val_intermediate = max_coord * 1.15;
-    lim_val = (lim_val_intermediate < 1e-5) * 1.0 + (lim_val_intermediate >= 1e-5) * lim_val_intermediate;
-
-    % plot(ax, [-lim_val, lim_val], [0 0], 'k--', 'LineWidth', 0.5, 'HandleVisibility','off');
-    % plot(ax, [0 0], [-lim_val, lim_val], 'k--', 'LineWidth', 0.5, 'HandleVisibility','off');
-
+   
     axis(ax, 'equal');
-    xlim(ax, [-lim_val, lim_val]);
-    ylim(ax, [-lim_val, lim_val]);
+    xlim(ax, [-1.5, 1.5]);
+    ylim(ax, [-1.5, 1.5]);
 
-    xlabel(ax, '$\mathrm{In-Phase})$', 'FontSize', 30);
-    ylabel(ax, '$\mathrm{Quadrature}', 'FontSize', 30);
-    title(ax, sprintf('$%s$: Transmitted vs. Received Symbols', modStr), 'FontSize', 30);
+    xlabel(ax, '$\mathrm{In-Phase}$', 'FontSize', 30);
+    ylabel(ax, '$\mathrm{Quadrature}$', 'FontSize', 30);
+    % title(ax, sprintf('$%s$: Transmitted vs. Received Symbols', modStr), 'FontSize', 30);
     
     grid(ax, 'on');
     grid(ax, 'minor');
     lgd = legend(ax, 'show', 'Location', 'best');
-    lgd.FontSize = 20;
+    lgd.FontSize = 30;
     box(ax, 'on');
     hold(ax, 'off');
 end

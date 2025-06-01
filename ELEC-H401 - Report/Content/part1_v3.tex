@@ -1,0 +1,149 @@
+\section{Optimal Communication Chain over the Ideal Channel}
+\subsection{Communication Chain}
+\begin{figure}[H]
+	\centering
+	\includegraphics[angle=-90, width=0.9\linewidth]{Images/com-chain} % Ensure 'Images/com-chain' path is correct
+	\caption{Block diagram of the communication system.}
+	\label{fig:com-chain}
+\end{figure}
+The communication chain simulated in this project, depicted in Figure \ref{fig:com-chain}, models the pipeline of a DVB-C transmitter and receiver at baseband. On the transmitter side, a bit-stream is generated, then mapped to complex symbols from a chosen QAM modulation. These symbols are subsequently up-sampled and shaped by a half-root Nyquist filter to limit their bandwidth. On the receiver's side, the transmitted signal is matched-filtered with the same half-root Nyquist filter, in order to maximize the signal-to-noise ratio. The output of this matched filter is then down-sampled at the symbol instances, and these samples are demapped to recover an estimate of the transmitted bit-stream.
+\par
+In this project, the Low Density Parity Check Encoder is not implemented, and the algorithms for symbol mapping and demapping were provided.
+
+\subsection{Bit Generation and Symbol Mapping and Demapping}
+The mapping of bit-streams to complex symbols is used to enhance spectral efficiency, as it allows more bits to be transmitted per symbol over a given bandwidth. In the implemented receiver, symbol demapping converts the noisy received symbols back into an estimated sequence of bits. This demapping was achieved using the Maximum Likelihood (ML) criterion. The ML principle directs the selection of the constellation symbol that is closest to the received sample in terms of minimum Euclidean distance:
+\begin{equation}
+	\tilde{\underline{s}}_{m}^{ML} = \arg\min_{\underline{s}_{m}} \left(\sum_{k=1}^{K}(r_{k}-s_{mk})^{2}\right)
+\end{equation}
+Where:
+\begin{itemize}
+	\item $\tilde{\underline{s}}_{m}^{ML}$ is the estimated symbol using the ML criterion.
+	\item $\underline{r} = [r_1, r_2, \dots, r_K]^T$ is the received vector after demodulation.
+	\item $\underline{s}_{m} = [s_{m1}, s_{m2}, \dots, s_{mK}]^T$ is the vector representing the $m$-th possible transmitted symbol.
+\end{itemize}
+This selection process, by minimizing the squared Euclidean distance, is equivalent to maximizing $\ln p(\underline{r}|\underline{s}_{m})$ for an Additive White Gaussian Noise (AWGN) channel, where $p(\underline{r}|\underline{s}_{m})$ is the conditional probability of receiving vector $\underline{r}$ given that symbol $\underline{s}_m$ was sent.
+
+\subsection{Nyquist Filtering}
+After mapping, the sequence of complex symbols $I[k]$ is up-sampled by a factor of OSF $> 1$. This up-sampled sequence is then passed through a pulse shaping filter $g(t)$. The goals of this filtering are:
+\begin{enumerate}
+	\item To limit the bandwidth of the transmitted signal.
+	\item To control interference between successive symbols.
+\end{enumerate}
+
+\subsubsection{Half-Root Nyquist Filter Design and Matched Filtering}
+To achieve optimal performance regarding Inter-Symbol Interference (ISI) cancellation and to maximize the Signal-to-Noise Ratio at the receiver, a root-raised cosine (RRC) filter was utilized for $g(t)$. This approach involves employing the RRC filter $g(t)$ at the transmitter and its matched version $g^*(-t)$ at the receiver. The convolution of these two filters, $h(t) = g(t) \otimes g^*(-t)$, forms the overall channel response. This resulting $h(t)$ is designed to satisfy the Nyquist criterion for zero ISI, which states that for symbols sampled at intervals $T_{symb}$ (assuming $h(t)$ is normalized):
+\begin{equation}
+	h(kT_{symb}) = \begin{cases}
+		1 & k=0 \\
+		0 & k \neq 0
+	\end{cases}
+	\label{eq:nyquist_criterion_part1}
+\end{equation}
+\par
+The design process for the RRC filter $g(t)$ in this work began with defining the transfer function of a raised-cosine (RC) filter, $H(f)$. From $H(f)$, the frequency response of the RRC filter was determined as $G(f) = \sqrt{H(f)}$, and its time-domain equivalent $g(t)$ was subsequently found using an inverse Fourier transform. The frequency response of the RC filter $H(f)$ is given by:
+\begin{equation}
+	H(f) = \begin{cases}
+		T_{symb} & 0 \le |f| < \frac{1-\beta}{2T_{symb}} \\ 
+		\frac{T_{symb}}{2} \left(1 + \cos\left[\frac{\pi T_{symb}}{\beta}\left(|f| - \frac{1-\beta}{2T_{symb}}\right)\right]\right) & \frac{1-\beta}{2T_{symb}} \le |f| \le \frac{1+\beta}{2T_{symb}} \\ 
+		0 & |f| > \frac{1+\beta}{2T_{symb}}
+	\end{cases}
+	\label{eq:rc_response_part1}
+\end{equation}
+
+\subsubsection{Filter Properties and Inter-Symbol Interference Cancellation}
+The RC filter, formed by $g(t)$ and its matched pair, effectively confines the signal energy within a defined bandwidth $B = R_{symb} (1+\beta)/2$, where $R_{symb} = 1/T_{symb}$ is the symbol rate. The frequency response of the RC filter resulting from the implementation using Equation \ref{eq:rc_response_part1} is shown in Figure \ref{fig:h-rc-freq}. This plot confirms that the filter restricts the signal to its allocated spectrum, showing the  flat passband, a roll-off region, and a stopband. For the project parameters ($R_{symb} = !!!!!!!!!!$ and $\beta = 0.2$), the communication bandwidth is $B = 0.6 R_{symb}$.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\linewidth]{Images/h-rc-freq} 
+	\caption{Raised Cosine Filter Frequency Response from simulation ($\beta = 0.2$, $taps = 301$, $OSF = 8$).}
+	\label{fig:h-rc-freq}
+\end{figure}
+
+In the time domain, the overall RC filter $h(t) = g(t) \otimes g^*(-t)$ is designed such that when sampled at the symbol rate, its response approximates a Dirac delta function, thereby satisfying the Nyquist criterion for zero ISI (Equation \ref{eq:nyquist_criterion_part1}). Figure \ref{fig:h-rc} shows the impulse response $h(t)$ obtained in the simulation. The stems, representing $h(kT_{symb})$, demonstrate this property: the normalized response is unity at $t=0$ and zero at $t = \pm T_{symb}, \pm 2T_{symb}, \dots$. This result from the simulation confirms that the implemented filter structure successfully nullifies contributions from other symbols at the optimal sampling instant for a given symbol, thus eliminating ISI.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\linewidth]{Images/h-rc} 
+	\caption{Normalized RC and RRC filter Impulse Responses from simulation, with $h(kT_{symb})$ illustrating ISI cancellation.}
+	\label{fig:h-rc}
+\end{figure}
+
+\subsection{Noise Addition and Performance Evaluation}
+One of the factors limiting communication performance in an ideal channel is Additive White Gaussian Noise (AWGN), which represents the cumulative effect of various sources of interference and thermal noise within a communication system.\par
+
+In the baseband equivalent model used for the simulation, the received signal $r(t)$ is the sum of the transmitted baseband signal $s(t)$ at the output of the pulse shaping filter $g(t)$ and the complex baseband equivalent noise $n(t)$:
+\begin{equation}
+    r(t) = s(t) + n(t)
+\end{equation} \par
+The noise $n(t)$ is a complex Gaussian random process. Its real and imaginary components are independent, each with a power spectral density of $N_0/2$ over the bandwidth of interest.\par
+After matched filtering with $g^*(-t)$ and sampling at $t = kT_{symb}$, the $k$-th received sample $y[k]$ can be expressed as:
+\begin{equation}
+    y[k] = (r(t) \otimes g^*(-t))|_{t=kT_{symb}}
+\end{equation}
+\par
+Given that the overall response $h(t) = g(t) \otimes g^*(-t)$ is designed to satisfy the Nyquist criterion for zero ISI (Equation \ref{eq:nyquist_criterion_part1}, with $h(0)$ normalized to 1):
+\begin{align}
+    y[k] &= I[k]h(0) + \sum_{m \neq k} I[m]h((k-m)T_{symb}) + (n(t) \otimes g^*(-t))|_{t=kT_{symb}} \\
+    y[k] &= I[k](1) + \sum_{m \neq k} I[m](0) + (n(t) \otimes g^*(-t))|_{t=kT_{symb}} \\
+    y[k] &= I[k] + n_o[k] \label{eq:yk_plus_noise}
+\end{align}
+where $I[k]$ is the transmitted complex symbol and $n_o[k]$ represents the noise component at the output of the sampler, $n_o[k] = (n(t) \otimes g^*(-t))|_{t=kT_{symb}}$. The noise samples $n_o[k]$ are complex Gaussian random variables. Since the input noise $n(t)$ is white and Gaussian, and the matched filtering operation is linear, $n_o[k]$ is also Gaussian. The real and imaginary components of $n_o[k]$ are independent, and each has a variance $\sigma^2 = N_0/2$. \par
+
+The main goal of this section of the project is to evaluate the system's performance by simulating the Bit Error Rate (BER) as a function of the ratio of bit energy ($E_b$) to the one-sided power spectral density of noise ($N_0$). This evaluation relies on the derived model in Equation \ref{eq:yk_plus_noise}.
+
+To accurately simulate the system at a specific $E_b/N_0$ value, the power of the simulated noise $n_o[k]$ must be correctly set relative to the signal power. The average energy per symbol $E_s$, for a given QAM constellation, is first calculated as:
+\begin{equation}
+    E_s = \text{E}\left[|I[k]|^2\right]
+\end{equation}
+where $\text{E}[\cdot]$ is the expectation operator. 
+\par
+If each symbol $I[k]$ represents $b = \log_2 M$ information bits (where $M$ is the constellation size), the average energy per bit $E_b$ is:
+\begin{equation}
+    E_b = \frac{E_s}{b} = \frac{E_s}{\log_2 M}
+\end{equation}
+\par
+Given a target $E_b/N_0$ value, $N_0$ can be express:
+\begin{equation}
+    N_0 = \frac{E_b}{(E_b/N_0)_{\text{target}}}
+\end{equation}
+\par
+The complex noise $n_o[k]$ added to each symbol $I[k]$ in the simulation as per Equation \ref{eq:yk_plus_noise} is thus generated with a total variance of $N_0$, meaning its real and imaginary components each have a variance of $N_0/2$.
+
+The experimental BER is obtained by transmitting a large number of random bits through the simulated communication chain, adding the scaled AWGN to the symbols as described, demapping the resulting $y[k]$, and then comparing the recovered bits with the originally transmitted bits:
+\begin{equation}
+    \text{BER}_{\text{exp}} = \frac{\text{Number of erroneously detected bits}}{\text{Total number of transmitted bits}}
+\end{equation}
+The simulated BER values are then plotted against a range of $E_b/N_0$ values. These experimental results are compared against theoretical BER performance for M-QAM to validate the simulation. For square M-QAM constellations with Gray coding, the theoretical Bit Error Rate ($P_b$) is approximated at moderate to high $E_b/N_0$ values by:
+\begin{equation}
+    P_b \approx \frac{4}{\log_2 M} \left(1 - \frac{1}{\sqrt{M}}\right) Q\left(\sqrt{\frac{3 (\log_2 M)^2}{M-1} \frac{E_b}{N_0}}\right)
+    \label{eq:Pb_MQAM_Eb_cont_final}
+\end{equation}
+where $Q(x) = \frac{1}{\sqrt{2\pi}} \int_x^\infty e^{-u^2/2} du$ is the Q-function.
+
+Figure \ref{fig:ber-mod_cont} illustrates the BER curves obtained from the simulations for various QAM modulations. These results demonstrate the  trade-off between spectral efficiency and power efficiency; higher-order modulations achieve higher data rates within the same bandwidth but require more power for the same BER.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{Images/ber-mod.png}
+    \caption{Simulated BER vs. $E_b/N_0$ for various modulation types}
+    \label{fig:ber-mod_cont}
+\end{figure}
+
+The effect of AWGN on the received signal constellation, leading to the $y[k]$ values, is depicted in Figure \ref{fig:constellations-noise_cont} using results from the 16-QAM simulation. Figure \ref{fig:const-noisy_cont} shows the simulated 16-QAM symbols after the addition of noise, representing $s(t)+n(t)$ before sampling and matched filtering. After, matched filtering and downsampling (leading to $y[k]=I[k]+n_o[k]$), the symbols, as shown in Figure \ref{fig:const-filtered-down_cont}, cluster around the ideal constellation locations, hence validating the SNR maximization effect of the matched filter.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{Images/const-noisy.png}
+        \caption{Simulated noisy 16-QAM symbols before matched filter.}
+        \label{fig:const-noisy_cont}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{Images/const-filtered-down.png} 
+        \caption{Simulated 16-QAM symbols after matched filtering and downsampling.}
+        \label{fig:const-filtered-down_cont}
+    \end{subfigure}
+    \caption{Simulation - Effect of AWGN and matched filtering on a 16-QAM constellation}
+    \label{fig:constellations-noise_cont}
+\end{figure}

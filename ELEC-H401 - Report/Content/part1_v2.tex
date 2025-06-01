@@ -28,7 +28,7 @@ Where:
 \end{itemize}
 
 \subsection{Nyquist Filtering}
-The sequence of complex symbols $I[n]$, after mapping, is up-sampled by a factor of $M > 1$ and then passed through a pulse shaping filter $g(t)$. This filtering is essential for:
+The sequence of complex symbols $I[k]$, after mapping, is up-sampled by a factor of $OSF > 1$ and then passed through a pulse shaping filter $g(t)$. This filtering is essential for:
 \begin{enumerate}
 	\item Limiting the bandwidth of the transmitted signal.
 	\item Controlling interference between successive symbols.
@@ -67,11 +67,92 @@ In the time domain, the impulse response of the overall RC filter $h(t)$, when s
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\linewidth]{Images/h-rc} % Ensure 'Images/h-rc' path is correct
-	\caption{Normalized RC and RRC filter Impulse Responses}
+	\caption{Normalized RC and RRC filter Impulse Responses, and ISI cancellation}
 	\label{fig:h-rc}
 \end{figure}
 
 \subsection{Noise Addition and Performance Evaluation}
-\textcolor{red}{[LATER]}
+One of the factor limiting communication performance in an ideal channel is the Additive White Gaussian Noise, which represents the cumulative effect of various sources of interference and thermal noise within a communication system.\par
+
+In the baseband equivalent model, the received signal $r(t)$ is the sum of the transmitted baseband signal $s(t)$ and the complex baseband equivalent noise $n(t)$:
+\begin{equation}
+    r(t) = s(t) + n(t)
+\end{equation} \par
+The noise $n(t)$ is a complex Gaussian random process. Its real and imaginary components are independant, each with a power spectral density of ${N_0}/{2}$ over the bandwidth of interest.\par
+After matched filtering with $g(-t)$ and sampling at $t = kT_{symb}$, the $k$-th received sample $y[k]$
+can be expressed as
+\begin{equation}
+    y[k] = (r(t) \otimes g(-t))|_{t=kT_{symb}}
+\end{equation}
+\par
+Given that the overall response $h(t) = g(t) \otimes g(-t)$ is designed to satisfy the Nyquist criterion for zero ISI:
+\begin{align}
+    y[k] &= I[k]h(0) + \sum_{m \neq k} I[m]h((k-m)T_{symb}) + (n(t) \otimes g(-t))|_{t=kT_{symb}}\\
+    y[k] &= I[k] + (n(t) \otimes g(-t))|_{t=kT_{symb}}\\
+    y[k] &= I[k] + n_o[k]
+\end{align}
+where $I[k]$ is the transmitted complex symbol and $n_o[k]$ represents the noise component at the output of the sampler, given by $n_o[k] = (n(t) \otimes g(-t))|_{t=kT_{symb}}$. The noise samples $n_o[k]$ are complex Gaussian random variables. Since the input noise $n(t)$ is white and Gaussian, and the matched filtering operation is linear, $n_o[k]$ is also Gaussian. The real and imaginary components of $n_o[k]$ are independent, and each has a variance $\sigma^2 = N_0/2$ \par
+
+The main goal of this section of the project is to evaluate the system's performance by simulating the Bit Error Rate as a function of the ratio of bit energy ($E_b$) to the one-sided power spectral density of noise ($N_0$)
+
+To accurately simulate the system at a specific $E_b/N_0$ value, the power of the simulated noise must be correctly set relative to the signal power. The average energy per symbol $E_s$, for a given QAM constellation is calculated as:
+\begin{equation}
+    E_s = \text{E}\left[|I[k]|^2\right]
+\end{equation}
+where $\text{E}[\cdot]$ is the expectation operator. If each symbol $I[k]$ represents $b = \log_2 M$ information bits (where $M$ is the constellation size), the average energy per bit $E_b$ is:
+\begin{equation}
+    E_b = \frac{E_s}{b} = \frac{E_s}{\log_2 M}
+\end{equation}
+
+\par
+Given a target $E_b/N_0$ value, the required $N_0$ can be determined:
+\begin{equation}
+    N_0 = \frac{E_b}{(E_b/N_0)_{\text{target}}}
+\end{equation}
+
+\par
+The complex noise $n_o[k]$ added to each symbol $I[k]$ in the simulation is thus generated with a total variance of $N_0$, meaning that its real and imaginary components each have a variance of $N_0/2$.
+
+The experimental BER is obtained by transmitting a large number of random bits through the simulated communication chain, adding the appropriately scaled AWGN, demapping the received symbols, and then comparing the recovered bits with the originally transmitted bits:
+\begin{equation}
+    \text{BER}_{\text{exp}} = \frac{\text{Number of erroneously detected bits}}{\text{Total number of transmitted bits}}
+\end{equation}
+The simulated BER values are then plotted against a range of $E_b/N_0$ values. These experimental results are compared against theoretical BER performance for M-QAM to validate the simulation. For square M-QAM constellations with Gray coding, the theoretical BER can be approximated by recognizing that M-QAM can be decomposed into two independent $\sqrt{M}$-PAM systems. The BER theoritical is approximated at moderate to high $E_b/N_0$ values by:
+\begin{equation}
+    P_b \approx \frac{4}{\log_2 M} \left(1 - \frac{1}{\sqrt{M}}\right) Q\left(\sqrt{\frac{3 (\log_2 M)^2}{M-1} \frac{E_b}{N_0}}\right)
+    \label{eq:Pb_MQAM_Eb_cont}
+\end{equation}
+where $Q(x) = \frac{1}{\sqrt{2\pi}} \int_x^\infty e^{-u^2/2} du$ is the Q-function.
+
+Figure \ref{fig:ber-mod_cont} illustrates the simulated BER curves for various QAM modulations, demonstrating the trade-off between spectral efficiency and power efficiency; higher-order modulations achieve higher data rates within the same bandwidth but require more power (higher $E_b/N_0$) for the same BER.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{Images/ber-mod.png}
+    \caption{BER vs. $E_b/N_0$ for various modulation type.}
+    \label{fig:ber-mod_cont}
+\end{figure}
+
+The effect of AWGN on the received signal constellation is depicted in Figure \ref{fig:constellations-noise_cont}. Figure \ref{fig:const-noisy_cont} shows conceptually how noise spreads the ideal constellation points. After matched filtering and optimal sampling, as shown in Figure \ref{fig:const-filtered-down_cont}, the signal points cluster around the ideal constellation locations, illustrating the SNR maximization by the matched filter before demapping.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{Images/const-noisy.png}
+        \caption{Simulated noisy 16-QAM symbols before filtering.}
+        \label{fig:const-noisy_cont}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{Images/const-filtered-down.png} 
+        \caption{Simulated 16-QAM symbols after matched filtering and sampling.}
+        \label{fig:const-filtered-down_cont}
+    \end{subfigure}
+    \caption{Effect of AWGN and matched filtering on a 16-QAM constellation.}
+    \label{fig:constellations-noise_cont}
+\end{figure}
+
+The agreement between the simulated BER performance and the theoretical predictions based on Equation \ref{eq:Pb_MQAM_Eb_cont} serves as a verification of the correct implementation and understanding of the optimal communication chain components under AWGN conditions.
+
+
 \subsection{Questions and Answers}
 \textcolor{red}{[LATER]}
