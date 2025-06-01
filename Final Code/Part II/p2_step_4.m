@@ -20,6 +20,8 @@ Beta = params.filter.RolloffFactor;
 NumTaps = params.filter.NumFilterTaps;
 iterations = params.simulation.iterations_per_EbN0;
 
+
+%% ========================================== Communication Chain ==========================================
 % ---- CFO and sample time offset Parameters ----
 Fc = 600e6;                     % Carrier frequency in Hz
 ppm = 2;
@@ -32,16 +34,14 @@ pilot_position = 50;
 pilot_size = 20;
 averaging_window = 8;           % Number of symbols to average over for CFO estimation
 
-
-%% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
 unuseful = symb_tx(1 : pilot_position - 1);
 pilot = symb_tx(pilot_position : pilot_position + pilot_size - 1);
 signal_tx = upSampler(symb_tx, OSF).';
-h_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx_filtered = applyFilter(signal_tx, h_rrc, NumTaps);
+g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+signal_tx_filtered = applyFilter(signal_tx, g_rrc, NumTaps);
 signalPower_tx = mean(abs(signal_tx_filtered).^2);
 Eb = signalPower_tx / BitRate;
 
@@ -55,7 +55,7 @@ signal_tx_distorted  = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_ve
 
 
 % --- Receiver Chain ---
-signal_rx_matched_filtered  = applyFilter(signal_tx_distorted, h_rrc, NumTaps);                    % Apply Matched Filter
+signal_rx_matched_filtered  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);                    % Apply Matched Filter
 symb_rx    = downSampler(signal_rx_matched_filtered, OSF);
 [toa, cfo_hat] = frameFreqAcquisition(pilot, symb_rx, averaging_window, Tsymb);
 time_vector_symb = (0 : length(symb_rx) - 1).' * Tsymb;
@@ -75,15 +75,7 @@ num_EbN0_points     = length(EbN0_domain_dB);                       % Number of 
 
 % --- Pre-allocate results array ---
 ber_data = zeros(num_EbN0_points, 1);                               % Stores simulated BER for each Eb/N0 point
-fprintf('\n\n========================================');
-fprintf('\n    BER Curve Simulation Setup         ');
-fprintf('\n========================================');
-fprintf('\n Modulation       : %d-%s', ModOrder, upper(ModType));
-fprintf('\n Eb/N0 Range      : %.1f dB to %.1f dB (Step: %.1f dB)', EbN0_min_dB, EbN0_max_dB, EbN0_step_dB);
-fprintf('\n Bits per Tx Block: %d', NumBits);
-fprintf('\n Iterations       : %d', iterations_per_EbN0);
-fprintf('\n Total Bits       : %d', NumBits * iterations_per_EbN0);
-fprintf('\n========================================');
+
 
 % Outer Loop: Iterate through each specified Eb/N0 value
 for idx_EbN0 = 1:num_EbN0_points
@@ -95,7 +87,7 @@ for idx_EbN0 = 1:num_EbN0_points
     unuseful = symb_tx(1 : pilot_position - 1);
     pilot = symb_tx(pilot_position : pilot_position + pilot_size - 1);
     signal_tx = upSampler(symb_tx, OSF).';                                 % Upsample by inserting zeros, transpose for filter function
-    signal_tx_filtered   = applyFilter(signal_tx, h_rrc, NumTaps);          % Apply RRC pulse shaping filter
+    signal_tx_filtered   = applyFilter(signal_tx, g_rrc, NumTaps);          % Apply RRC pulse shaping filter
     signalPower = mean(abs(signal_tx_filtered).^2);                         % Average Power of baseband signal after pulse shaping
     Eb = signalPower / BitRate;                                             % Energy per bit Eb = P_avg / R_bit
     total_bit_errors_point = 0;                                             % Reset error counter for this Eb/N0 point
@@ -116,7 +108,7 @@ for idx_EbN0 = 1:num_EbN0_points
 
 
         % -------- 2. Receiver Chain --------
-        signal_rx_matched_filtered = applyFilter(signal_tx_distorted, h_rrc, NumTaps);     % Apply matched filter (same RRC filter)
+        signal_rx_matched_filtered = applyFilter(signal_tx_distorted, g_rrc, NumTaps);     % Apply matched filter (same RRC filter)
         symb_rx = downSampler(signal_rx_matched_filtered, OSF);                         % Downsample to symbol rate, transpose back
         [toa, cfo_hat] = frameFreqAcquisition(pilot, symb_rx, averaging_window, Tsymb);
         symb_rx = symb_rx .* exp(-1j * (2 * pi * cfo_hat * time_vector_symb));          % Compensate for CFO and phase offset
@@ -146,7 +138,7 @@ plotBERCurve(ber_data, params);
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
 plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 

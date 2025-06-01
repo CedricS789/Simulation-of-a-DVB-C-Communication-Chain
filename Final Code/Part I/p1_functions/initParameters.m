@@ -27,7 +27,7 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^8;                          % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^15;                          % Total data bits (multiple of Nbps)
         params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
@@ -60,5 +60,5 @@ function params = initParameters(Nbps)
         min = params.simulation.EbN0_min_dB;                   % Minimum Eb/N0 value in dB
         max = params.simulation.EbN0_max_dB;                   % Maximum Eb/N0 value in dB
         iter = params.simulation.EbN0_step_dB;                 % Step size for Eb/N0 sweep in dB
-        params.simulation.EbN0_domain_dB = (min:iter:max)';    % Range of Eb/N0 values to simulate (dB)
+        params.simulation.EbN0_domain_dB = (min:iter:max).';    % Range of Eb/N0 values to simulate (dB)
 end

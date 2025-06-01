@@ -1,10 +1,10 @@
-%% ========================================== p2_step_3 - Gardner  ===================================
+%% ====================================== p2_step_3 - Gardner  ======================================
 close all; clear; clc;
 addpath('../Part I/p1_functions');
 addpath('p2_functions')
 
 
-%% ========================================== Load Simulation Parameters  ==========================================
+%% =================== Load Simulation Parameters  ===================
 Nbps = 4;
 params = initParameters(Nbps);
 displayParameters(params);
@@ -20,6 +20,8 @@ Beta = params.filter.RolloffFactor;
 NumTaps = params.filter.NumFilterTaps;
 iterations = params.simulation.iterations_per_EbN0;
 
+
+%% =================== Communication Chain ===================
 % ---- CFO and Sample Time Offset Parameters ----
 Fc = 600e6;                                                 % Carrier frequency in Hz
 delta_cfo_ppm = 0.0 * 1e-6 * Fc;                            % Frequency offset in Hz (0.08 ppm)
@@ -28,14 +30,12 @@ phi_0 = 0;                                                  % Phase offset in ra
 timing_offset_norm = 0.9;                                   % Normalized timing offset (% of symbol period)
 initial_offset_samples = round(timing_offset_norm * OSF);   % Initial offset in samples (1 sample)
 
-
-%% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
 symb_tx = upSampler(symb_tx, OSF).';
-h_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx = applyFilter(symb_tx, h_rrc, NumTaps);
+g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+signal_tx = applyFilter(symb_tx, g_rrc, NumTaps);
 signalPower_tx = mean(abs(signal_tx).^2);
 Eb = signalPower_tx / BitRate;
 
@@ -51,7 +51,7 @@ signal_tx_distorted = signal_tx_noisy .* offset_signal;
 signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);                 % Apply timing offset (1 sample delay)
 
 % --- Receiver Chain ---
-signal_rx  = applyFilter(signal_tx_distorted, h_rrc, NumTaps);
+signal_rx  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
 
 % --- Gardner Loop ----
 k=1;                                                                                    % Handle the first symbol separately
@@ -86,11 +86,11 @@ bit_rx  = bit_rx(:);                                                % Ensure bit
 
 
 
-%% ====================== Generate Plots  =======================
+%% =================== Generate Plots  ===================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps);
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
+plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
 plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
 plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
@@ -102,7 +102,7 @@ ylabel('Estimated Timing Error \epsilon_k (samples)');
 grid on;
 
 
-%% ====================== Interpolation Function =======================
+%% =================== Interpolation Function ===================
 function y = interpolate_signal(signal, float_index)
     N = length(signal);
     k = floor(float_index);

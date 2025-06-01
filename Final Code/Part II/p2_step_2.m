@@ -30,49 +30,49 @@ num_EbN0_points     = length(EbN0_domain_dB);                       % Number of 
 
 
 
-%% ========================= Communication Chain =====================
-% ---- CFO and Sample Time Offset Parameters ----
-Fc = 600e6;                                   % Carrier frequency in Hz
-ppm = 1;
-delta_cfo = ppm * 1e-6 * Fc;                  % Frequency offset in Hz (0.08 ppm)
-phi_0 = 0*randi([0 12]) * (pi/12);            % Phase offset in rad
-timing_offset_norm = 0*0.04;                  % Normalized timing offset (% of symbol period)
-initial_offset_samples = round(timing_offset_norm * OSF); % Initial offset in samples (1 sample)
-
-% --- Transmitter  ---
-bit_tx = randi([0, 1], 1, NumBits).';
-symb_tx = mapping(bit_tx, Nbps, ModType);
-symb_tx_up = upSampler(symb_tx, OSF).';
-h_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx = applyFilter(symb_tx_up, h_rrc, NumTaps);
-signalPower_tx = mean(abs(signal_tx).^2);
-Eb = signalPower_tx / BitRate;
-
-time_vector = (0 : length(signal_tx) - 1).' * Ts;
-time_vector_symb = (0 : length(symb_tx) - 1).' * Tsymb;
-
-% -- Introduce Noise --
-EbN0dB = 1e10;
-signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
-
-% --- Introduce CFO, Phase Offset, and Sample Time Offset ---
-signal_tx_distorted = signal_tx_noisy .* exp(1j * ((2 * pi * delta_cfo) * time_vector + phi_0));
-signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
-
-% --- Receiver Chain ---
-signal_rx  = applyFilter(signal_tx_distorted, h_rrc, NumTaps);
-symb_rx_down = downSampler(signal_rx, OSF);
-symb_rx = symb_rx_down .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));
-bit_rx = demapping(symb_rx_down, Nbps, ModType); 
-
-
-%% =========================  Plots  ================================
-bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx_down);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(h_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+% %% ========================= Communication Chain =====================
+% % ---- CFO and Sample Time Offset Parameters ----
+% Fc = 600e6;                                   % Carrier frequency in Hz
+% ppm = 1;
+% delta_cfo = ppm * 1e-6 * Fc;                  % Frequency offset in Hz (0.08 ppm)
+% phi_0 = 0*randi([0 12]) * (pi/12);            % Phase offset in rad
+% timing_offset_norm = 0*0.04;                  % Normalized timing offset (% of symbol period)
+% initial_offset_samples = round(timing_offset_norm * OSF); % Initial offset in samples (1 sample)
+% 
+% % --- Transmitter  ---
+% bit_tx = randi([0, 1], 1, NumBits).';
+% symb_tx = mapping(bit_tx, Nbps, ModType);
+% symb_tx_up = upSampler(symb_tx, OSF).';
+% g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+% signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps);
+% signalPower_tx = mean(abs(signal_tx).^2);
+% Eb = signalPower_tx / BitRate;
+% 
+% time_vector = (0 : length(signal_tx) - 1).' * Ts;
+% time_vector_symb = (0 : length(symb_tx) - 1).' * Tsymb;
+% 
+% % -- Introduce Noise --
+% EbN0dB = 1e10;
+% signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
+% 
+% % --- Introduce CFO, Phase Offset, and Sample Time Offset ---
+% signal_tx_distorted = signal_tx_noisy .* exp(1j * ((2 * pi * delta_cfo) * time_vector + phi_0));
+% signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
+% 
+% % --- Receiver Chain ---
+% signal_rx  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
+% symb_rx_down = downSampler(signal_rx, OSF);
+% symb_rx = symb_rx_down .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));
+% bit_rx = demapping(symb_rx_down, Nbps, ModType); 
+% 
+% 
+% %% =========================  Plots  ================================
+% bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+% plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx_down);
+% plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+% plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
+% plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+% plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 
 
@@ -94,7 +94,7 @@ plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 % fprintf('\nPPM Values for CFO: %s', mat2str(ppm_values));
 % fprintf('\n========================================');
 % 
-% h_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+% g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
 % 
 % for idx_ppm = 1:length(ppm_values)
 %     current_ppm = ppm_values(idx_ppm);
@@ -109,7 +109,7 @@ plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 %         bit_tx = randi([0, 1], 1, NumBits).';
 %         symb_tx = mapping(bit_tx, Nbps, ModType);
 %         symb_tx_up = upSampler(symb_tx, OSF).';
-%         signal_tx = applyFilter(symb_tx_up, h_rrc, NumTaps);
+%         signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps);
 %         signalPower = mean(abs(signal_tx).^2);
 %         Eb = signalPower / BitRate;
 % 
@@ -124,7 +124,7 @@ plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 %             signal_tx_distorted = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
 %             signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
 % 
-%             signal_rx = applyFilter(signal_tx_distorted, h_rrc, NumTaps);
+%             signal_rx = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
 %             symb_rx_down = downSampler(signal_rx, OSF);
 %             symb_rx_down = symb_rx_down .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));
 %             bit_rx = demapping(symb_rx_down, Nbps, ModType);
@@ -148,7 +148,7 @@ plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 
 %% ========================= BER (Multiple time offset)  ======================
-time_offset_norm_values = [0, 0.05]; 
+time_offset_norm_values = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]; 
 delta_cfo = 0; 
 phi_0 = 0;     
 
@@ -164,6 +164,8 @@ fprintf('\n(Note: Plotted as %% of Tsymb).');
 fprintf('\nCFO fixed at: %g Hz, Phase Offset fixed at: %.2f rad', delta_cfo, phi_0);
 fprintf('\n====================================================');
 
+g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+
 for idx_offset = 1:length(time_offset_norm_values)
     current_time_offset_norm = time_offset_norm_values(idx_offset);
     current_initial_offset_samples = round(current_time_offset_norm * OSF); 
@@ -177,7 +179,7 @@ for idx_offset = 1:length(time_offset_norm_values)
         bit_tx = randi([0, 1], 1, NumBits).'; 
         symb_tx = mapping(bit_tx, Nbps, ModType); 
         symb_tx_up = upSampler(symb_tx, OSF).'; 
-        signal_tx = applyFilter(symb_tx_up, h_rrc, NumTaps); 
+        signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps); 
         
         signalPower = mean(abs(signal_tx).^2);
         Eb = signalPower / BitRate; 
@@ -194,7 +196,7 @@ for idx_offset = 1:length(time_offset_norm_values)
             signal_tx_distorted = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
             signal_tx_distorted = circshift(signal_tx_distorted, current_initial_offset_samples);
             
-            signal_rx = applyFilter(signal_tx_distorted, h_rrc, NumTaps);
+            signal_rx = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
             symb_rx = downSampler(signal_rx, OSF);
             
             symb_rx = symb_rx .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));

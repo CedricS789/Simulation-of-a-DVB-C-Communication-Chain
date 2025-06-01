@@ -34,7 +34,7 @@ function hFig = plotBERCurvesModulation(all_ber_data, params, nbps_values)
     xlabel(ax, '$E_b/N_0$ (dB)', 'Interpreter', 'latex', 'FontSize', 30);
     ylabel(ax, 'Bit Error Rate', 'Interpreter', 'latex', 'FontSize', 30);
     title(ax, 'BER vs. $E_b/N_0$', 'Interpreter', 'latex', 'FontSize', 30); 
-    legend(ax, 'show', 'Location', 'southwest', 'Interpreter', 'latex', 'FontSize', 24);
+    legend(ax, 'show', 'Location', 'best', 'Interpreter', 'latex', 'FontSize', 30);
     
     ylim(ax, [1e-5 1]);
     xlim(ax, [min(EbN0_domain_dB) max(EbN0_domain_dB)]);
@@ -42,5 +42,8 @@ function hFig = plotBERCurvesModulation(all_ber_data, params, nbps_values)
     set(ax, 'YScale', 'log');
     ax.FontSize = 30;
     ax.TickLabelInterpreter = 'latex';
+    ax.GridColor = [0.3 0.3 0.3];
+    ax.GridAlpha = 0.7;
     hold(ax, 'off');
+    box on;
 end
