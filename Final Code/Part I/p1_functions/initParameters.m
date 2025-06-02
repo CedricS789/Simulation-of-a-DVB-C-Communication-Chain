@@ -39,13 +39,13 @@ function params = initParameters(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps = 701;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps =  101;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
         % =====================================================================
         % == Sampling Parameters ==
         % =====================================================================
-        params.sampling.OversamplingFactor = 20;                                                            % Samples per symbol (OSF >= 2)
+        params.sampling.OversamplingFactor = 16;                                                            % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
 

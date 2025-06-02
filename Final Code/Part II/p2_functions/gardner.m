@@ -1,37 +1,31 @@
-function [symb_adjusted, time_errors] = gardner(y)
-    % Gardner timing recovery for signal y with 2 samples per symbol
+function [symb_rx_corrected_down, time_errors] = gardner(signal_rx, kappa, OSF)
+   % Returns the downsampled signal. No need to downsample again in the
+   % main code
 
-    k = 0.001;  % Step size
-    N_sym = floor(length(y) / 2);  % Number of symbols (2 samples per symbol)
+    N_sym = floor(length(signal_rx) / OSF); 
+    symb_rx_corrected_down = zeros(1, N_sym);
+    time_errors = zeros(1, N_sym);
 
-    time_errors = zeros(1, N_sym-1);
-    symb_adjusted = zeros(1, N_sym);
+    symb_rx_corrected_down(1) = signal_rx(1);
+    time_errors(1) = 0;
+    
+    for n = 1:N_sym - 1
+        idx_range = (n - 1) * OSF + 1 : (n * OSF + 2);
+        x = idx_range;
+        symbols = signal_rx(x);
 
-    eps_now = 0;
-    eps_prev = 0;
+        eps_now = time_errors(n);
+        idx_now = n * OSF + 1 - eps_now;
+        idx_half = n * OSF + 1 - OSF/2 - eps_now;
 
-    for n = 2:N_sym
-        % Compute sample positions
-        idx_prev = 2*(n-2) + 1 - eps_prev;
-        idx_half = 2*(n-1) - eps_now;
-        idx_now  = 2*(n-1) + 1 - eps_now;
+        y_now = interp1(x, symbols, idx_now, 'linear', 0);
+        y_prev = symb_rx_corrected_down(n);
+        y_half = interp1(x, symbols, idx_half, 'linear', 0);
 
-        % Interpolated values
-        y_prev = interpolate(y, idx_prev);
-        y_half = interpolate(y, idx_half);
-        y_now  = interpolate(y, idx_now);
-
-        % Gardner error and update
-        error = real(y_half * (conj(y_now) - conj(y_prev)));
-        eps_new = eps_now - k * error;
-
-        % Store outputs
-        time_errors(n-1) = eps_new;
-        symb_adjusted(n-1) = y_now;
-
-        % Update timing
-        eps_prev = eps_now;
-        eps_now = eps_new;
+        eps_new = eps_now + kappa * real(y_half * (conj(y_now) - conj(y_prev)));
+        symb_rx_corrected_down(n+1) = y_now;
+        time_errors(n+1) = eps_new;
     end
-end
 
+    symb_rx_corrected_down = symb_rx_corrected_down.';
+end

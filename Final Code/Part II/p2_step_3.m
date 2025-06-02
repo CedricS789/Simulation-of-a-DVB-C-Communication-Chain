@@ -5,7 +5,7 @@ addpath('p2_functions')
 
 
 %% =================== Load Simulation Parameters  ===================
-Nbps = 4;
+Nbps = 2;
 params = initParameters(Nbps);
 displayParameters(params);
 NumBits = params.timing.NumBits;
@@ -13,103 +13,132 @@ ModType = params.modulation.ModulationType;
 ModOrder= params.modulation.ModulationOrder;
 OSF = params.sampling.OversamplingFactor;
 SymRate = params.timing.SymbolRate;
+Tsymb = params.timing.SymbolPeriod;
 BitRate = params.timing.BitRate;
 Fs = params.sampling.SamplingFrequency;
 Ts = params.sampling.SamplePeriod;
 Beta = params.filter.RolloffFactor;
 NumTaps = params.filter.NumFilterTaps;
-iterations = params.simulation.iterations_per_EbN0;
+
+% --- BER Curve Parameters ---
+EbN0_min_dB         = params.simulation.EbN0_min_dB;                % Minimum Eb/N0 value in dB
+EbN0_max_dB         = params.simulation.EbN0_max_dB;                % Maximum Eb/N0 value in dB
+EbN0_step_dB        = params.simulation.EbN0_step_dB;               % Step size for Eb/N0 sweep in dB
+iterations          = params.simulation.iterations_per_EbN0;        % Iterations for averaging BER at each Eb/N0 point
+EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of Eb/N0 values to simulate (dB)
+num_EbN0_points     = length(EbN0_domain_dB);  
 
 
 %% =================== Communication Chain ===================
 % ---- CFO and Sample Time Offset Parameters ----
-Fc = 600e6;                                                 % Carrier frequency in Hz
-delta_cfo_ppm = 0.0 * 1e-6 * Fc;                            % Frequency offset in Hz (0.08 ppm)
-delta_omega = 2 * pi * delta_cfo_ppm;                       % Frequency offset in rad/s
-phi_0 = 0;                                                  % Phase offset in rad
-timing_offset_norm = 0.9;                                   % Normalized timing offset (% of symbol period)
-initial_offset_samples = round(timing_offset_norm * OSF);   % Initial offset in samples (1 sample)
+Fc = 600e6;                                                    % Carrier frequency in Hz
+ppm = 0;
+delta_cfo = ppm * 1e-6 * Fc;                                   % Frequency offset in Hz (1 ppm)
+phi_0 = 0;                                                     % Phase offset in rad
+timing_offset_percent = 0.05;                                   % Normalized timing offset (% of symbol period)
+initial_offset_samples = round(timing_offset_percent * OSF);   % Initial offset in samples (1 sample)
 
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
-symb_tx = upSampler(symb_tx, OSF).';
+symb_tx_up = upSampler(symb_tx, OSF).';
 g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx = applyFilter(symb_tx, g_rrc, NumTaps);
+signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps);
 signalPower_tx = mean(abs(signal_tx).^2);
 Eb = signalPower_tx / BitRate;
 
+time_vector = (0 : length(signal_tx) - 1).' * Ts;
+time_vector_symb = (0 : length(symb_tx) - 1).' * Tsymb;
+
 % -- Introduce Noise --
-EbN0dB = 1000;
+EbN0dB = 1e10;
 signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
 
 % --- Introduce CFO, Phase Offset, and Sample Time Offset ---
-num_samples_tx = length(signal_tx_noisy);
-time_vector = (0 : num_samples_tx - 1).' * Ts;
-offset_signal = exp(1j * (delta_omega * time_vector + phi_0));
-signal_tx_distorted = signal_tx_noisy .* offset_signal;
-signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);                 % Apply timing offset (1 sample delay)
+signal_tx_distorted = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
+signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
 
 % --- Receiver Chain ---
+kappa = 0.001;
 signal_rx  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
-
-% --- Gardner Loop ----
-k=1;                                                                                    % Handle the first symbol separately
-actual_sample_point_k1 = current_base_sample_idx + epsilon_hat;                         % Calculate initial FLAOTING POINT sampling instant for symbol 1
-
-symbols_corrected(k) = interpolate_signal(signal_rx, actual_sample_point_k1);
-epsilon_k_history(k) = epsilon_hat;                                                     % Store the initial timing error for symbol 1
-y_prev_corr = symbols_corrected(k);                                                     % Set y_prev_corr for the next iteration (k=2), this is y[n-1]
-current_base_sample_idx = current_base_sample_idx + OSF;                                % Advance the base sample index by OverSamplingFactor for the next symbol
-
-for k = 2:Nsymb                                                                         % Loop for remaining symbols (n=2, 3, ... Nsymb)
-    sample_point_k_minus_half = current_base_sample_idx - OSF/2 + epsilon_hat;
-    sample_point_k = current_base_sample_idx + epsilon_hat;
-
-    y_k_minus_half = interpolate_signal(signal_rx, sample_point_k_minus_half);          % Get mid-point sample y[n-0.5]
-    y_k = interpolate_signal(signal_rx, sample_point_k);                                % Get current symbol sample y[n]
-
-    err = real( y_k_minus_half * (conj(y_k) - conj(y_prev_corr)) );
-    epsilon_hat = epsilon_hat - kappa * err;
-
-    symbols_corrected(k) = y_k;                                     % Store the current symbol (sampled with epsilon_hat before this update)
-    epsilon_k_history(k) = epsilon_hat;                             % Store the new timing error estimate
-
-    y_prev_corr = y_k;                                              % Update y_prev_corr for the next iteration
-    current_base_sample_idx = current_base_sample_idx + OSF;        % Advance base sample index for the next symbol
-end
-
-
-symb_rx = symbols_corrected;                                        % Assign corrected symbols to receiver output
-bit_rx = demapping(symb_rx, Nbps, ModType);                         % Demap symbols to bits
-bit_rx  = bit_rx(:);                                                % Ensure bit_rx is a row vector
-
+symb_rx_down = downSampler(signal_rx, OSF);
+[symb_rx_corected_down, time_shift_errors] = gardner(signal_rx, kappa, OSF);
+symb_rx_corected_down = symb_rx_corected_down .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));
+bit_rx_corrected = demapping(symb_rx_corected_down, Nbps, ModType);
 
 
 %% =================== Generate Plots  ===================
-bits_to_plot = min(params.timing.NumBits, 100 * Nbps);
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
-
-figure;
-plot(1:Nsymb, epsilon_k_history);
-title('Gardner Algorithm Timing Error Estimate (\epsilon_k)');
-xlabel('Symbol Index (k)');
-ylabel('Estimated Timing Error \epsilon_k (samples)');
-grid on;
+plotConstellation_Tx_Rx(ModOrder, ModType, symb_rx_down, symb_rx_corected_down);
+% bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
+% plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx_up, symb_rx_down);
+% plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+% plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+% plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
 
 
-%% =================== Interpolation Function ===================
-function y = interpolate_signal(signal, float_index)
-    N = length(signal);
-    k = floor(float_index);
-    mu = float_index - k;
-    if k >= 1 && k < N
-        y = (1 - mu) * signal(k) + mu * signal(k + 1);
-    else
-        y = 0; % Handle edge cases by zeroing out-of-bounds samples
-    end
-end
+
+%% ========================= BER (Multiple time offset and gardner compensation)  ======================
+% time_offset_norm_values = [0.05]; 
+% delta_cfo = 0; 
+% phi_0 = 0;     
+% kappa = 0.001;
+% 
+% all_ber_data_time_offset = zeros(num_EbN0_points, length(time_offset_norm_values));
+% 
+% g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
+% 
+% for idx_offset = 1:length(time_offset_norm_values)
+%     current_time_offset_norm = time_offset_norm_values(idx_offset);
+%     current_initial_offset_samples = round(current_time_offset_norm * OSF); 
+% 
+%     fprintf('\n\nSimulating for Time Offset = %.3f Tsymb (samples: %d).', current_time_offset_norm, current_initial_offset_samples);
+% 
+%     ber_data_one_offset = zeros(num_EbN0_points, 1);
+%     for idx_EbN0 = 1:num_EbN0_points
+%         EbN0dB = EbN0_domain_dB(idx_EbN0);
+% 
+%         bit_tx = randi([0, 1], 1, NumBits).'; 
+%         symb_tx = mapping(bit_tx, Nbps, ModType); 
+%         symb_tx_up = upSampler(symb_tx, OSF).'; 
+%         signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps); 
+% 
+%         signalPower = mean(abs(signal_tx).^2);
+%         Eb = signalPower / BitRate; 
+% 
+%         total_bit_errors_point = 0;
+%         total_bits_sim_point = 0;
+% 
+%         time_vector = (0:length(signal_tx)-1).' * Ts; 
+%         time_vector_symb = (0:length(symb_tx)-1).' * Tsymb; 
+% 
+%         for iter = 1:iterations
+%             signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
+% 
+%             signal_tx_distorted = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
+%             signal_tx_distorted = circshift(signal_tx_distorted, current_initial_offset_samples);
+% 
+%             signal_rx = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
+%             symb_rx_down = downSampler(signal_rx, OSF);
+%             [symb_rx_corected_down, time_shift_errors] = gardner(signal_rx, kappa, OSF);
+%             symb_rx_corected_down = symb_rx_corected_down .* exp(-1j * (2 * pi * delta_cfo * time_vector_symb));
+%             bit_rx = demapping(symb_rx_corected_down, Nbps, ModType);
+% 
+%             num_errors_iter = sum(bit_tx ~= bit_rx);
+%             bits_iter = length(bit_tx); 
+% 
+%             total_bit_errors_point = total_bit_errors_point + num_errors_iter;
+%             total_bits_sim_point = total_bits_sim_point + bits_iter;
+%         end
+%         if total_bits_sim_point > 0
+%             ber_data_one_offset(idx_EbN0) = total_bit_errors_point / total_bits_sim_point;
+%         else
+%             ber_data_one_offset(idx_EbN0) = 1; 
+%         end
+%         fprintf('\n t_0 = %.1fTsymb, Eb/N0 = %5.1f dB : Bits = %8d, Errors = %6d, BER = %.3e', ...
+%                   current_time_offset_norm, EbN0dB, total_bits_sim_point, total_bit_errors_point, ber_data_one_offset(idx_EbN0));
+%     end
+%     all_ber_data_time_offset(:, idx_offset) = ber_data_one_offset;
+% end
+% 
+% plotBERCurvesTimeOffset(all_ber_data_time_offset, params, time_offset_norm_values);
+% plotConstellation_Tx_Rx(ModOrder, ModType, symb_rx_down, symb_rx_corected_down);

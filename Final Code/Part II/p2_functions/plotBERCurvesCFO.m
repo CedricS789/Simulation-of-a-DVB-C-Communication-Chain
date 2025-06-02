@@ -39,8 +39,8 @@ function hFig = plotBERCurvesCFO(all_ber_data, params, ppm_values)
     
     grid(ax, 'on');
     xlabel(ax, '$E_b/N_0$ (dB)', 'Interpreter', 'latex', 'FontSize', 30);
-    ylabel(ax, 'Bit Error Rate (BER)', 'Interpreter', 'latex', 'FontSize', 30);
-    titleStr = sprintf('BER vs. CFO ($%d$-%s)', ModOrder, upper(ModType));
+    ylabel(ax, 'Bit Error Rate', 'Interpreter', 'latex', 'FontSize', 30);
+    titleStr = sprintf('BER vs. $E_b/N_0$ ($%d$-%s)', ModOrder, upper(ModType));
     title(ax, titleStr, 'Interpreter', 'latex', 'FontSize', 30);
     legend(ax, 'show', 'Location', 'southwest', 'Interpreter', 'latex', 'FontSize', 30);
     

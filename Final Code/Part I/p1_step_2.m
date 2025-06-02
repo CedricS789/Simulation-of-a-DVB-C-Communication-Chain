@@ -31,14 +31,14 @@ signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps);
 
 % --- Receiver Chain ---
 signal_rx = applyFilter(signal_tx, g_rrc, NumTaps);
-symb_rx = downSampler(signal_rx, OSF);
-bit_rx = demapping(symb_rx, Nbps, ModType); 
+symb_rx_down = downSampler(signal_rx, OSF);
+bit_rx = demapping(symb_rx_down, Nbps, ModType); 
 bit_rx = bit_rx(:);  
 
 
 %% =================== Generate Plots  ===================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx);
+plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx_down);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
 plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
 plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);

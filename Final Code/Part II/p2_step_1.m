@@ -24,7 +24,7 @@ NumTaps = params.filter.NumFilterTaps;
 % ---- CFO Parameters ----
 Fc = 600e6;                             % Carrier frequency in Hz
 ppm = 1;
-delta_cfo_ppm = ppm * 1e-6 * Fc;        % Frequency offset in Hz (1 ppm)
+delta_cfo_ppm = ppm * 1e-6 * Fc;        % Frequency offset in Hz
 delta_omega = 2 * pi * delta_cfo_ppm;   % Frequency offset in rad/s
 phi_0 = 0;                              % Phase offset in rad
 
@@ -47,7 +47,7 @@ signal_tx_distorted  = signal_tx_noisy .* exp(1j * (delta_omega * time_vector + 
 
 % --- Receiver Chain ---
 signal_rx = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
-symb_rx_down = downSampler(signal_rx, OSF).';
+symb_rx_down = downSampler(signal_rx, OSF);
 bit_rx = demapping(symb_rx_down, Nbps, ModType); 
 bit_rx = bit_rx(:);  
 
@@ -55,6 +55,6 @@ bit_rx = bit_rx(:);
 %% =================== Generate Plots  ===================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx_up, symb_rx_down);
-plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
+% plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
+% plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
+% plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);

@@ -1,6 +1,6 @@
-function [bit_rx] = demapping_v2(symb_rx, Nbps, modulation)
-    symb_rx = symb_rx(:);
-    Nsymb = size(symb_rx, 1); 
+function [bit_rx] = demapping_v2(symb_rx_down, Nbps, modulation)
+    symb_rx_down = symb_rx_down(:);
+    Nsymb = size(symb_rx_down, 1); 
 
     if Nsymb == 0
         bit_rx = [];
@@ -16,7 +16,7 @@ function [bit_rx] = demapping_v2(symb_rx, Nbps, modulation)
             mean_level = mean(pam_levels); 
             sigma = sqrt(mean((pam_levels - mean_level).^2));
             
-            int_rx = sigma * real(symb_rx) + mean_level;
+            int_rx = sigma * real(symb_rx_down) + mean_level;
 
             int_det = round(int_rx);
 
@@ -64,7 +64,7 @@ function [bit_rx] = demapping_v2(symb_rx, Nbps, modulation)
             mean_level_1D = mean(pam_levels_1D); 
             sigma_1D = sqrt(mean((pam_levels_1D - mean_level_1D).^2));
             
-            symb_rxI = real(symb_rx); 
+            symb_rxI = real(symb_rx_down); 
 
             int_rxI = sigma_1D * sqrt(2) * symb_rxI + mean_level_1D;
 
@@ -96,7 +96,7 @@ function [bit_rx] = demapping_v2(symb_rx, Nbps, modulation)
                 bit_rx2I(:, ii) = xor(mapp_rxI(:, ii - 1), mapp_rxI(:, ii));
             end
 
-            symb_rxQ = imag(symb_rx); 
+            symb_rxQ = imag(symb_rx_down); 
 
             int_rxQ = sigma_1D * sqrt(2) * symb_rxQ + mean_level_1D;
 

@@ -1,14 +1,14 @@
-function [bit_rx] = demapping(symb_rx,Nbps,modulation)
+function [bit_rx] = demapping(symb_rx_down,Nbps,modulation)
 
 % INPUTS:
-% - symb_rx : vector of input symbols (variance 1)
+% - symb_rx_down : vector of input symbols (variance 1)
 % - Nbps : number of bits per symbol
 % - modulation : 'pam' or 'qam'
 %
 % OUTPUTS:
 % - bit_rx : vector of ouput bits
 
-Nsymb = size(symb_rx,1); % Number of symbols
+Nsymb = size(symb_rx_down,1); % Number of symbols
 
 switch modulation
     
@@ -16,7 +16,7 @@ switch modulation
         
         % Symbol to integer
         sigma = sqrt(sum(([0:2^Nbps-1]-(2^Nbps-1)/2).^2)/2^Nbps); 
-        int_rx = sigma * symb_rx + (2^Nbps-1)/2;
+        int_rx = sigma * symb_rx_down + (2^Nbps-1)/2;
 
         % Integer detection
         int_det = round(int_rx);
@@ -38,7 +38,7 @@ switch modulation
 
         % REAL PART
         NbpsI = Nbps/2; 
-        symb_rxI = real(symb_rx);
+        symb_rxI = real(symb_rx_down);
 
         % Symbol to integer
         sigmaI = sqrt(sum(([0:2^NbpsI-1]-(2^NbpsI-1)/2).^2)/2^NbpsI); 
@@ -61,7 +61,7 @@ switch modulation
          
         % IMAGINARY PART
         NbpsQ = Nbps/2; 
-        symb_rxQ = imag(symb_rx);
+        symb_rxQ = imag(symb_rx_down);
 
         % Symbol to integer
         sigmaQ = sqrt(sum(([0:2^NbpsQ-1]-(2^NbpsQ-1)/2).^2)/2^NbpsQ); 
