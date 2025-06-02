@@ -34,17 +34,17 @@ bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
 symb_tx_up = upSampler(symb_tx, OSF).';
 g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx = applyFilter(symb_tx_up, g_rrc, NumTaps);
-signalPower_tx = mean(abs(signal_tx).^2);
+signal_tx_filtered = applyFilter(symb_tx_up, g_rrc, NumTaps);
+signalPower_tx = mean(abs(signal_tx_filtered).^2);
 Eb = signalPower_tx / BitRate;
 
 % -- Introduce Noise --
 EbN0dB = 10;
-signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate);
+signal_tx_noisy = addAWGN(signal_tx_filtered, Eb, EbN0dB, OSF, SymRate);
 
 % --- Receiver Chain ---
-signal_rx = applyFilter(signal_tx_noisy, g_rrc, NumTaps);
-symb_rx_down = downSampler(signal_rx, OSF).';
+signal_rx_matched_filtered = applyFilter(signal_tx_noisy, g_rrc, NumTaps);
+symb_rx_down = downSampler(signal_rx_matched_filtered, OSF).';
 bit_rx = demapping(symb_rx_down, Nbps, ModType); 
 bit_rx = bit_rx(:);  
 
@@ -52,12 +52,12 @@ bit_rx = bit_rx(:);
 %% =================== Generate Plots  ===================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, signal_tx_noisy);
-plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, signal_rx);
+plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, signal_rx_matched_filtered);
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_tx, symb_rx_down);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotPSD_Tx_Rx(signal_tx, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx, signal_rx, Fs);
-
+plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
+plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
+plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
 
 
 %% ========================= BER (Multiple Modulations) ======================
@@ -96,8 +96,8 @@ for idx_nbps = 1:length(nbps_values)
         bit_tx = randi([0, 1], 1, NumBits).'; 
         symb_tx = mapping(bit_tx, current_nbps, ModType);
         symb_tx = upSampler(symb_tx, OSF).'; 
-        signal_tx = applyFilter(symb_tx, g_rrc, NumTaps); 
-        signalPower = mean(abs(signal_tx).^2);
+        signal_tx_filtered = applyFilter(symb_tx, g_rrc, NumTaps); 
+        signalPower = mean(abs(signal_tx_filtered).^2);
 
         current_bit_rate = SymRate * current_nbps; 
         Eb = signalPower / current_bit_rate;
@@ -105,14 +105,14 @@ for idx_nbps = 1:length(nbps_values)
         total_bit_errors_point = 0;
         total_bits_sim_point = 0;
 
-        time_vector = (0:length(signal_tx)-1).' * Ts; 
+        time_vector = (0:length(signal_tx_filtered)-1).' * Ts; 
         time_vector_symb = (0:length(symb_tx)-1).' * Tsymb; 
 
         for iter = 1:iterations 
-            signal_tx_noisy = addAWGN(signal_tx, Eb, EbN0dB, OSF, SymRate); 
-            signal_rx = applyFilter(signal_tx_noisy, g_rrc, NumTaps);
+            signal_tx_noisy = addAWGN(signal_tx_filtered, Eb, EbN0dB, OSF, SymRate); 
+            signal_rx_matched_filtered = applyFilter(signal_tx_noisy, g_rrc, NumTaps);
 
-            symb_rx_down = downSampler(signal_rx, OSF); 
+            symb_rx_down = downSampler(signal_rx_matched_filtered, OSF); 
             bit_rx = demapping_v2(symb_rx_down, current_nbps, ModType); 
 
             num_errors_iter = sum(bit_tx ~= bit_rx);

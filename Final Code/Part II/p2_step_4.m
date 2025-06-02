@@ -1,4 +1,4 @@
-%% =================== Step 4 - Frame and Frequency Acquisition ===================
+%% =================== Step 4 - Frame and Frequency Acquisition and Entire Communication Chain ===================
 clear; close all; clc;
 addpath('../Part I/p1_functions');
 addpath('p2_functions');
@@ -40,13 +40,13 @@ pilot_size = floor(length(symb_tx) * 0.4);
 
 unuseful = symb_tx(1 : pilot_position - 1);
 pilot = symb_tx(pilot_position : pilot_position + pilot_size - 1);
-signal_tx = upSampler(symb_tx, OSF).';
+symb_tx_up = upSampler(symb_tx, OSF).';
 g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
-signal_tx_filtered  = applyFilter(signal_tx, g_rrc, NumTaps);
+signal_tx_filtered  = applyFilter(symb_tx_up, g_rrc, NumTaps);
 signalPower_tx  = mean(abs(signal_tx_filtered).^2);
 Eb = signalPower_tx / BitRate;
 
-time_vector = (0 : length(signal_tx) - 1).' * Ts;
+time_vector = (0 : length(signal_tx_filtered) - 1).' * Ts;
 time_vector_symb = (0 : length(symb_tx) - 1).' * Tsymb;
 
 % -- Introduce Noise --
@@ -58,9 +58,9 @@ signal_tx_distorted  = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_ve
 signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
 
 % --- Receiver Chain ---
-signal_rx  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
-symb_rx_down = downSampler(signal_rx, OSF);
-[symb_rx_corected_down, time_shift_errors] = gardner(signal_rx, kappa, OSF);
+signal_rx_matched_filtered  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
+symb_rx_down = downSampler(signal_rx_matched_filtered, OSF);
+[symb_rx_corected_down, time_shift_errors] = gardner(signal_rx_matched_filtered, kappa, OSF);
 [toa, delta_cfo_hat] = frameFreqAcquisition(pilot, symb_rx_corected_down, averaging_window, Tsymb);
 symb_rx_corected_down = symb_rx_corected_down .* exp(-1j * (2 * pi * delta_cfo_hat * time_vector_symb));
 bit_rx = demapping(symb_rx_corected_down, Nbps, ModType); 
@@ -70,5 +70,6 @@ bit_rx = demapping(symb_rx_corected_down, Nbps, ModType);
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_rx_down, symb_rx_corected_down);
 plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
-plotPSD_Tx_Rx(signal_tx_filtered, signal_rx, Fs);
-plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx, Fs);
+plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
+plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
+plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
