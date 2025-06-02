@@ -89,7 +89,6 @@ for idx_nbps = 1:length(nbps_values)
     num_EbN0_points = length(EbN0_domain_dB);               % Number of points on the BER curve
 
     current_mod_order = 2^current_nbps;
-    fprintf('\n\nSimulating for Nbps = %d (%d-%s)', current_nbps, current_mod_order, upper(ModType));
 
     ber_data_one_modulation = zeros(num_EbN0_points, 1);
     for idx_EbN0 = 1:num_EbN0_points
