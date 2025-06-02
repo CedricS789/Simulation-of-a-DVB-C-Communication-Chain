@@ -27,7 +27,7 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^8;                          % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^6;                          % Total data bits (multiple of Nbps)
         params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
@@ -39,7 +39,7 @@ function params = initParameters(Nbps)
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps =  101;                                                              % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps =  301;                                                              % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
         % =====================================================================

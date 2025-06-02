@@ -69,8 +69,8 @@
 	The RRC filter $g(t)$ is derived from a raised-cosine (RC) filter with transfer function $H(f)$. The RRC frequency response is $G(f) = \sqrt{H(f)}$, and $g(t) = \mathcal{F}^{-1}\{G(f)\}$. $H(f)$ is given by:
 	\begin{equation}
 		H(f) = \begin{cases}
-			T_{symb} & 0 \le |f| < \frac{1-\beta}{2T_{symb}} \\ 
-			\frac{T_{symb}}{2} \left(1 + \cos\left[\frac{\pi T_{symb}}{\beta}\left(|f| - \frac{1-\beta}{2T_{symb}}\right)\right]\right) & \frac{1-\beta}{2T_{symb}} \le |f| \le \frac{1+\beta}{2T_{symb}} \\ 
+			T_{symb} & 0 \le |f| < \frac{1-\beta}{2T_{symb}} \\      
+			\frac{T_{symb}}{2} \left(1 + \cos\left[\frac{\pi T_{symb}}{\beta}\left(|f| - \frac{1-\beta}{2T_{symb}}\right)\right]\right) & \frac{1-\beta}{2T_{symb}} \le |f| \le \frac{1+\beta}{2T_{symb}} \\      
 			0 & |f| > \frac{1+\beta}{2T_{symb}}
 		\end{cases}
 		\label{eq:rc_response_part1}
@@ -96,7 +96,7 @@
 		\label{fig:nyquist-filter-combined}
 	\end{figure}
 	
-	The overall RC filter $h(t)$ confines signal energy to bandwidth $B = R_{symb} (1+\beta)/2$, where $R_{symb} = 1/T_{symb}$. Figure \ref{fig:h-rc-freq} shows the simulated $H(f)$ (from Eq. \ref{eq:rc_response_part1}), confirming spectral confinement with its passband, roll-off, and stopband. For project parameters ($R_{symb} = !!!!!!!!!!$ and $\beta = 0.2$), $B = 0.6 R_{symb}$.
+	The overall RC filter $h(t)$ confines signal energy to a communication bandwidth of $R_{symb}(1+\beta)$. For project parameters ($R_{symb} = 5 \text{ Msymb/s}$ and $\beta = 0.2$), this bandwidth is $6 \text{ MHz}$. Figure \ref{fig:h-rc-freq} shows the simulated $H(f)$, confirming spectral confinement with its passband, roll-off, and stopband.
 	
 	In the time domain, $h(t)$ when sampled at $T_{symb}$ intervals approximates a Dirac delta, satisfying Eq. \ref{eq:nyquist_criterion_part1} for zero ISI. Figure \ref{fig:h-rc} shows the simulated $h(t)$; stems at $h(kT_{symb})$ (unity at $t=0$, zero elsewhere) confirm ISI elimination by nullifying other symbols' contributions at the optimal sampling instant.
 	
@@ -148,7 +148,7 @@
 			\label{fig:const-noisy_cont}
 		\end{subfigure}\hfill
 		\begin{subfigure}{0.48\textwidth}
-			\includegraphics[width=\linewidth]{Images/const-filtered-down.png} 
+			\includegraphics[width=\linewidth]{Images/const-filtered-down.png}      
 			\caption{Simulated 16-QAM symbols after matched filtering and downsampling.}
 			\label{fig:const-filtered-down_cont}
 		\end{subfigure}
@@ -160,18 +160,18 @@
 	\subsection{The Problem of Synchronization}
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.8\linewidth]{sync-errors-conceptual} % Path: Images/sync-errors-conceptual
+		\includegraphics[width=0.8\linewidth]{Images/sync-errors-conceptual} 
 		\caption{Synchronization mismatches at the receiver}
 		\label{fig:sync-errors-conceptual}
 	\end{figure}
-	Accurate demodulation requires transmitter-receiver synchronization: precise symbol sampling instances and carrier frequency/phase alignment. Errors stem from independent local oscillators (frequency deviations from manufacturing/environment) and propagation delay (unknown phase shift, timing offset).
+	Accurate demodulation requires transmitter-receiver synchronization: precise symbol sampling instances and carrier frequency/phase alignment. Errors stem from independent local oscillators and propagation delay.
 	\par
 	Key synchronization errors:
 	\begin{itemize}
-		\item Carrier Frequency Offset (CFO), $\Delta f$: Difference between transmitter's and receiver's carrier frequencies.
-		\item Carrier Phase Offset, $\phi_0$: Phase difference between incoming carrier and receiver's local oscillator.
-		\item Sample Clock Offset (SCO), $\delta$: Frequency mismatch between transmitter's DAC clock and receiver's ADC clock (considered negligible and not implemented).
-		\item Sample Time Shift, $t_0$: Receiver's uncertainty about symbol arrival time, necessitating optimal sampling instant determination.
+		\item Carrier Frequency Offset (CFO), $\Delta f$: Difference between transmitter and receiver carrier frequencies.
+		\item Carrier Phase Offset, $\phi_0$: Phase difference between incoming carrier and receiver local oscillator.
+		\item Sample Clock Offset (SCO), $\delta$: Frequency mismatch between transmitter DAC clock and receiver ADC clock (neglected in this project).
+		\item Sample Time Shift, $t_0$: Receiver uncertainty about symbol arrival time.
 	\end{itemize}
 	Figure \ref{fig:sync-errors-conceptual} illustrates these mismatches: symbols generated at $nT_{symb}$ are effectively sampled at $nT_{symb}(1+\delta)+t_0$ by the receiver.
 	
@@ -233,7 +233,7 @@
 	\subsection{Gardner Algorithm for Timing Recovery}
 	The Gardner algorithm is a non-data-aided (NDA) feedback algorithm correcting sampling time errors. It estimates and corrects the normalized time shift $\epsilon[n]$ progressively.
 	
-
+	\paragraph{Principle:}
 	The algorithm observes samples at symbol instants and midway between them. The timing estimate $\hat{\epsilon}[n]$ update equation at symbol time $n$ is:
 	\begin{equation}
 		\hat{\epsilon}[n+1] = \hat{\epsilon}[n] - \kappa \cdot \text{Re} \left\{ y_{\hat{\epsilon}[n]}[n-1/2] \left( y_{\hat{\epsilon}[n]}^{*}[n] - y_{\hat{\epsilon}[n-1]}^{*}[n-1] \right) \right\}
@@ -249,7 +249,7 @@
 	\end{itemize}
 	The algorithm requires two input samples per symbol. The error term's sign indicates shift direction; its magnitude indicates extent.
 	
-
+	\paragraph{Performance and Convergence:}
 	Figure \ref{fig:gardner1} illustrates the mean time error $\hat{\epsilon}[n]$ convergence to the true time shift for various loop gains $\kappa$. Smaller $\kappa$ yields slower convergence but less steady-state jitter; larger $\kappa$ speeds convergence but increases jitter or causes instability.
 	
 	The Gardner algorithm is robust to CFO and phase offsets. Figure \ref{fig:gardner2} demonstrates this robustness, showing convergence under various CFO conditions. Performance remains stable for typical CFO values.
@@ -272,7 +272,7 @@
 	After timing recovery, frame synchronization (detecting pilot sequence start) and coarse CFO acquisition use a differential cross-correlator.
 	
 	\paragraph{Principle using Differential Cross-Correlator:}
-	The differential cross-correlator output metric $D_k[n]$ is:
+	This data-aided (DA) method uses known pilot symbols $a[l]$. The differential cross-correlator output metric $D_k[n]$ is:
 	\begin{equation}
 		D_k[n] = \frac{1}{N_p-k} \sum_{l=k}^{N_p-1} (y^*[n+l]a[l])(y^*[n+l-k]a[l-k])^*
 		\label{eq:diff_corr_metric_style_change}
@@ -292,6 +292,7 @@
 	\end{equation}
 	The differential nature provides CFO robustness.
 	
+	\paragraph{Performance Metrics:}
 	Performance is evaluated by estimation error variance for $\hat{n}$ and $\hat{\Delta f}$ versus $E_b/N_0$, pilot length $N_p$, and averaging window $K_{avg}$.
 	
 	\begin{figure}[H]
@@ -334,6 +335,22 @@
 	
 	Figures \ref{fig:acquisition_vs_pilot_len} and \ref{fig:acquisition_vs_K_avg} show these impacts. Longer pilots $N_p$ improve accuracy. An optimal $K_{avg}$ balances performance and complexity. Frame acquisition robustness to CFO is also verified.
 	
+
+	\subsection{Complete Chain}
+	Synchronization steps are ordered for robust performance:
+	\begin{enumerate}
+		\item \textbf{Timing Recovery (Gardner Algorithm):} Applied first due to its CFO/phase error robustness. It provides correctly timed samples.
+		\item \textbf{Frame Acquisition (Differential Cross-Correlator):} Detects frame start using time-corrected samples.
+		\item \textbf{Coarse CFO Acquisition (Differential Cross-Correlator):} Done with/after frame acquisition for initial CFO estimate and correction, reducing large frequency errors.
+		\item \textbf{Phase Tracking/Interpolation:} Compensates residual CFO and initial phase offset on data symbols, refining phase alignment.
+	\end{enumerate}
+	This sequence enables each algorithm to operate under conditions where its performance is optimal or robust. The effectiveness of the initial stages of this strategy—Gardner algorithm for timing and differential cross-correlator for frame/CFO acquisition—is demonstrated in Figure \ref{fig:const-corrected}. The figure compares the downsampled symbols suffering from CFO and sample time offset (light blue cloud) against the symbols after these synchronization steps (red tighter clusters). A significant improvement is evident: the corrected symbols are much more distinctly clustered around the ideal 16-QAM constellation points, indicating successful mitigation of the primary timing and frequency offsets. This correction is fundamental to achieving reliable demodulation and the low BER figures targeted by the communication system.
 	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\linewidth]{Images/const-corrected.png} 
+		\caption{Simulated 16-QAM constellation showing downsampled symbols affected by CFO and sample time offset (light blue) versus symbols after Gardner timing recovery and Frame/CFO acquisition (red). $E_b/N_0 = 20$ dB.}
+		\label{fig:const-corrected}
+	\end{figure}
 	
 \end{document}

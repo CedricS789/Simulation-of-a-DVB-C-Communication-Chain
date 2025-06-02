@@ -5,7 +5,7 @@ addpath('p2_functions');
 
 
 %% ========================================== Load Simulation Parameters  ==========================================
-Nbps = 4;
+Nbps = 2;
 params = initParameters(Nbps);
 displayParameters(params);
 NumBits = params.timing.NumBits;
@@ -20,23 +20,24 @@ Ts = params.sampling.SamplePeriod;
 Beta = params.filter.RolloffFactor;
 NumTaps = params.filter.NumFilterTaps;
 
-%% ========================================== Communication Chain ==========================================
 % ---- CFO and sample time offset Parameters ----
 Fc = 600e6;
-ppm = 2;
+ppm = 0;
 delta_cfo = ppm * 1e-6 * Fc;
 phi_0  = 0;
-timing_offset_percent = 0.1;
+timing_offset_percent = 0*0.1;
 initial_offset_samples = round(timing_offset_percent * OSF);
 kappa = 0.01;
 
-pilot_position = 70;
-averaging_window = 50; 
+pilot_position = 1;
+averaging_window = 10; 
 
+%% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
-pilot_size = floor(length(symb_tx) * 0.4);
+% pilot_size = floor(length(symb_tx) * 0.4);
+pilot_size = 20;
 
 unuseful = symb_tx(1 : pilot_position - 1);
 pilot = symb_tx(pilot_position : pilot_position + pilot_size - 1);
@@ -60,7 +61,11 @@ signal_tx_distorted = circshift(signal_tx_distorted, initial_offset_samples);
 % --- Receiver Chain ---
 signal_rx_matched_filtered  = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
 symb_rx_down = downSampler(signal_rx_matched_filtered, OSF);
-[symb_rx_corected_down, time_shift_errors] = gardner(signal_rx_matched_filtered, kappa, OSF);
+
+% [symb_rx_corected_down, time_shift_errors] = gardner(signal_rx_matched_filtered, kappa, OSF);
+% [toa, delta_cfo_hat] = frameFreqAcquisition(pilot, symb_rx_corected_down, averaging_window, Tsymb);
+symb_rx_corected_down = symb_rx_down;
+
 [toa, delta_cfo_hat] = frameFreqAcquisition(pilot, symb_rx_corected_down, averaging_window, Tsymb);
 symb_rx_corected_down = symb_rx_corected_down .* exp(-1j * (2 * pi * delta_cfo_hat * time_vector_symb));
 bit_rx = demapping(symb_rx_corected_down, Nbps, ModType); 
@@ -73,3 +78,16 @@ plotBitstream_Tx_Rx(bit_tx, bit_rx, bits_to_plot);
 plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
+
+
+%% ====================== Robustness Analysis  =======================
+EbN0_domain = 0:2:16;
+num_iterations = 3000;
+K_values = [1, 8, 16];
+% N_fixed = floor(length(symb_tx) * 0.1);
+N_fixed = 20;
+% analyzeAvgWindow(params, pilot_position, EbN0_domain, num_iterations, ppm, K_values, N_fixed);
+
+N_values = [10, 20, 40];
+K_fixed = 8;
+analyzePilotSize(params, pilot_position, EbN0_domain, num_iterations, ppm, N_values, K_fixed);
