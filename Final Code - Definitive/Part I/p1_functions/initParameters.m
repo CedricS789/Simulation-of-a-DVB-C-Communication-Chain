@@ -27,7 +27,7 @@ function params = initParameters(Nbps)
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^15;                          % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^16;                          % Total data bits (multiple of Nbps)
         params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
@@ -35,19 +35,23 @@ function params = initParameters(Nbps)
         params.timing.BitPeriod = 1 / params.timing.BitRate;                            % Tb [s]
         params.timing.StreamDuration = params.timing.NumBits / params.timing.BitRate;   % Total time [s]
 
+       
+        % =====================================================================
+        % == Sampling Parameters ==
+        % =====================================================================
+        params.sampling.OversamplingFactor = 50;                                                            % Samples per symbol (OSF >= 2)
+        params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
+        params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
+         
+
         % =====================================================================
         % == Filter Parameters ==
         % =====================================================================
         params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps =  501;                                                             % RRC Filter length (odd recommended)
+        params.filter.NumFilterTaps =  16 * params.sampling.OversamplingFactor + 1;                                                             % RRC Filter length (odd recommended)
         params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
-        % =====================================================================
-        % == Sampling Parameters ==
-        % =====================================================================
-        params.sampling.OversamplingFactor = 16;                                                            % Samples per symbol (OSF >= 2)
-        params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
-        params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
+
 
         % =====================================================================
         % == BER Curve Simulation Parameters ==
