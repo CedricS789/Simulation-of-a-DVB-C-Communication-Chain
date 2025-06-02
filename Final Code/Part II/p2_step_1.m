@@ -19,8 +19,6 @@ Ts = params.sampling.SamplePeriod;
 Beta = params.filter.RolloffFactor;
 NumTaps = params.filter.NumFilterTaps;
 
-
-%% =================== Communication Chain ===================
 % ---- CFO Parameters ----
 Fc = 600e6;                             % Carrier frequency in Hz
 ppm = 1;
@@ -28,6 +26,7 @@ delta_cfo_ppm = ppm * 1e-6 * Fc;        % Frequency offset in Hz
 delta_omega = 2 * pi * delta_cfo_ppm;   % Frequency offset in rad/s
 phi_0 = 0;                              % Phase offset in rad
 
+%% =================== Communication Chain ===================
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);

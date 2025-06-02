@@ -3,7 +3,6 @@ clear; close all; clc;
 addpath('../Part I/p1_functions');
 addpath('p2_functions');
 
-
 %% ========================================== Load Simulation Parameters  ==========================================
 Nbps = 4;
 params = initParameters(Nbps);
@@ -31,7 +30,6 @@ kappa = 0.1;
 
 pilot_position = 50;
 averaging_window = 16; 
-
 
 %% ========================================== Communication Chain ==========================================
 % --- Transmitter  ---
@@ -66,8 +64,6 @@ symb_rx_down = downSampler(signal_rx_matched_filtered, OSF);
 symb_rx_corected_down = symb_rx_corected_down .* exp(-1j * (2 * pi * delta_cfo_hat * time_vector_symb));
 bit_rx = demapping(symb_rx_corected_down, Nbps, ModType); 
 
-
-
 %% ====================== Generate Plots  =======================
 bits_to_plot = min(params.timing.NumBits, 100 * Nbps); 
 plotConstellation_Tx_Rx(ModOrder, ModType, symb_rx_down, symb_rx_corected_down);
@@ -76,11 +72,9 @@ plotPSD_Tx_Rx(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 plotBasebandFrequencyResponse(signal_tx_filtered, signal_rx_matched_filtered, Fs);
 plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
 
-
-
 %% ====================== Robustness Analysis  =======================
 EbN0_domain = 0:2:16;
-num_iterations = 3000;
+num_iterations = 1000;
 
 K_values = [1, 8, 16];
 N_fixed = floor(length(symb_tx) * 0.1);

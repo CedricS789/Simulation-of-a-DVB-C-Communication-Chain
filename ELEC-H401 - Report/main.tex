@@ -1,339 +1,415 @@
 \documentclass[11pt]{article}
-\input{packages}
+\input{packages} 
 \usepackage{setspace}
 \usepackage{graphicx}
 \usepackage{subcaption}
-\usepackage{parskip}
-\usepackage{indentfirst}
+\usepackage{parskip} 
+\usepackage{indentfirst} 
 \graphicspath{{Images/}}
-%\setlength{\parindent}{1.5em}
-\usepackage{float}
+\usepackage{float} 
+\usepackage{amsmath}
 \onehalfspacing
 
 \begin{document}
-	\justifying
-	
-	\include{Content/TitlePage}
+	\justifying 
+	\pagenumbering{roman}
+	\include{Content/TitlePage} 
 	\tableofcontents
 	\newpage
 	\listoffigures
-	
 	\newpage
+        \pagenumbering{arabic}
 	\section*{Introduction}{\addcontentsline{toc}{section}{Introduction}}
 	This project focuses on designing and simulating a Digital Video Broadcasting Cable transmission chain using Matlab.
-	The main goal is to model and analyze the components of a typical modem. The first part of this project includes establishing an optimal communication chain over an ideal Additive White Gaussian Noise channel, mapping the signal into symbols, Nyquist filtering, and evaluating the performance of the system through Bit Error Rate simulations for Quadrature Amplitude Modulation signals. The second part revolves around the design and assessment of time and frequency synchronization algorithms. This encompasses evaluating the impact of synchronization errors such as carrier phase and frequency offset and sample time shift. The algorithms used for this purpose are the Gardner Algorithm for time recovery, and a differential cross-correlator for joint frame and frequency acquisition. Afterwards, their effectiveness is demonstrated \textcolor{red}{through convergence analysis and residual error evaluation (double check)}. \textcolor{red}{The study also explores phase interpolation techniques to mitigate remaining phase drifts. Finally, the project aims to validate the simulated chain through real-life experimentation on a Hybrid Fiber-Coax setup using Adalm-Pluto hardware, and to compare the simulated performance with experimental observations.}
+	The main goal is to model and analyze the components of a typical modem. The first part of this project includes establishing an optimal communication chain over an ideal Additive White Gaussian Noise channel, mapping the signal into symbols, Nyquist filtering, and evaluating the performance of the system through Bit Error Rate simulations. The second part revolves around the design and assessment of time and frequency synchronization algorithms. This encompasses evaluating the impact of synchronization errors such as carrier phase offset, frequency offset, and sample time shift. The algorithms used for this purpose are the Gardner Algorithm for timing recovery, and a differential cross-correlator for joint frame and frequency acquisition. Afterwards, their effectiveness is demonstrated through convergence analysis and residual error evaluation. Finally, the project aims to validate the simulated chain through real-life experimentation on a Hybrid Fiber-Coax setup using Adalm-Pluto hardware, and to compare the simulated performance with experimental observations.
 	
 	
 	\section{Optimal Communication Chain over the Ideal Channel}
-	\subsection{Communication Chain}
+	Figure \ref{fig:com-chain} shows the simulated DVB-C baseband communication chain. The transmitter generates bits, maps them to QAM symbols, upsamples, and pulse-shapes them with a half-root Nyquist filter. The receiver uses a matched filter, then downsamples and demapps the symbols. In this project, Low-density parity-check (LDPC) coding is not implemented.
+	
 	\begin{figure}[H]
 		\centering
-		\includegraphics[angle=-90, width=0.7\linewidth]{Images/com-chain}
+		\includegraphics[angle=-90, width=0.6\linewidth]{Images/com-chain}
 		\caption{Block diagram of the communication system.}
 		\label{fig:com-chain}
 	\end{figure}
-	Figure \ref{fig:com-chain} shows the simulated DVB-C baseband communication chain. A transmitter generates a bit-stream, maps it to QAM symbols, up-samples, and shapes them with a half-root Nyquist filter to limit bandwidth. The receiver employs a matched half-root Nyquist filter to maximize SNR, then down-samples at symbol instances, and demapps samples to estimate the transmitted bit-stream.
-	\par
-	In this project, the Low Density Parity Check Encoder is not implemented, and the algorithms for symbol mapping and demapping were provided.
 	
-	\subsection{Bit Generation and Symbol Mapping and Demapping}
-	Mapping bit-streams to complex symbols enhances spectral efficiency (more bits/symbol per bandwidth). Symbol demapping in the receiver estimates the bit sequence from noisy symbols using the Maximum Likelihood (ML) criterion. ML selects the constellation symbol $\underline{s}_{m}$ minimizing Euclidean distance to the received sample $\underline{r}$:
+	\subsection{Symbol Mapping and Demapping}
+	Symbol mapping transforms random bits into complex symbols. The demapping process uses the Maximum Likelihood (ML) criterion to select the constellation symbol $\underline{s}_{m}$ that minimizes the Euclidean distance to the received sample $\underline{r}$:
 	\begin{equation}
-		\tilde{\underline{s}}_{m}^{ML} = \arg\min_{\underline{s}_{m}} \left(\sum_{k=1}^{K}(r_{k}-s_{mk})^{2}\right)
+		\tilde{\underline{s}}_{m}^{\text{ML}} = \operatorname*{arg\,min}_{\underline{s}_{m}} \left(\sum_{k=1}^{K}(r_{k}-s_{mk})^{2}\right)
 	\end{equation}
-	Where:
-	\begin{itemize}
-		\item $\tilde{\underline{s}}_{m}^{ML}$ is the estimated symbol using the ML criterion.
-		\item $\underline{r} = [r_1, r_2, \dots, r_K]^T$ is the received vector after demodulation.
-		\item $\underline{s}_{m} = [s_{m1}, s_{m2}, \dots, s_{mK}]^T$ is the vector representing the $m$-th possible transmitted symbol.
-	\end{itemize}
-	Minimizing squared Euclidean distance is equivalent to maximizing $\ln p(\underline{r}|\underline{s}_{m})$ for an Additive White Gaussian Noise (AWGN) channel, where $p(\underline{r}|\underline{s}_{m})$ is the conditional probability of receiving vector $\underline{r}$ given symbol $\underline{s}_m$ was sent.
+	This is equivalent to maximizing $\ln p(\underline{r}|\underline{s}_{m})$ for an AWGN channel.
 	
-	\subsection{Nyquist Filtering}
-	Mapped complex symbols $I[k]$ are up-sampled by OSF $> 1$ and passed through a pulse shaping filter $g(t)$ to:
-	\begin{enumerate}
-		\item Limit transmitted signal bandwidth.
-		\item Control inter-symbol interference.
-	\end{enumerate}
-	
-	\subsubsection{Half-Root Nyquist Filter Design and Matched Filtering}
-	For optimal ISI cancellation and SNR maximization, a root-raised cosine (RRC) filter $g(t)$ is used for pulse shaping. The receiver uses a matched filter $g^*(-t)$. Their convolution, $h(t) = g(t) \otimes g^*(-t)$, is the overall channel response, designed to satisfy the Nyquist zero ISI criterion at sampling intervals $T_{symb}$ (normalized $h(t)$):
-	\begin{equation}
-		h(kT_{symb}) = \begin{cases}
-			1 & k=0 \\
-			0 & k \neq 0
-		\end{cases}
-		\label{eq:nyquist_criterion_part1}
-	\end{equation}
-	\par
-	The RRC filter $g(t)$ is derived from a raised-cosine (RC) filter with transfer function $H(f)$. The RRC frequency response is $G(f) = \sqrt{H(f)}$, and $g(t) = \mathcal{F}^{-1}\{G(f)\}$. $H(f)$ is given by:
+	\subsection{Half-Root Nyquist Filter Design}
+	Nyquist filtering employs a root-raised cosine (RRC) filter $g(t)$ at the transmitter for pulse shaping, and its matched version $g^*(-t)$ at the receiver. Their convolution, $h(t) = g(t) \otimes g^*(-t)$, satisfies the Nyquist criterion for zero Inter-Symbol Interference (ISI) at sampling intervals $T_{\text{symb}}$, meaning $h(kT_{\text{symb}}) \approx \delta[k]$. The RRC frequency response is $G(f) = \sqrt{H(f)}$, where $H(f)$ is the raised cosine (RC) filter response, given by:
 	\begin{equation}
 		H(f) = \begin{cases}
-			T_{symb} & 0 \le |f| < \frac{1-\beta}{2T_{symb}} \\ 
-			\frac{T_{symb}}{2} \left(1 + \cos\left[\frac{\pi T_{symb}}{\beta}\left(|f| - \frac{1-\beta}{2T_{symb}}\right)\right]\right) & \frac{1-\beta}{2T_{symb}} \le |f| \le \frac{1+\beta}{2T_{symb}} \\ 
-			0 & |f| > \frac{1+\beta}{2T_{symb}}
+			T_{\text{symb}} & 0 \le |f| < \frac{1-\beta}{2T_{\text{symb}}} \\ 
+			\frac{T_{\text{symb}}}{2} \left(1 + \cos\left[\frac{\pi T_{\text{symb}}}{\beta}\left(|f| - \frac{1-\beta}{2T_{\text{symb}}}\right)\right]\right) & \frac{1-\beta}{2T_{\text{symb}}} \le |f| \le \frac{1+\beta}{2T_{\text{symb}}} \\ 
+			0 & |f| > \frac{1+\beta}{2T_{\text{symb}}}
 		\end{cases}
-		\label{eq:rc_response_part1}
 	\end{equation}
+	Figure \ref{fig:nyquist-filter-combined} shows the simulated $H(f)$ for $R_{\text{symb}} = 5 \text{ Msymb/s}$ and $\beta = 0.2$, confining the signal to a 6 MHz bandwidth, and $h(t)$ illustrating ISI cancellation at $kT_{\text{symb}}$.
 	
-	\subsubsection{Filter Properties and Inter-Symbol Interference Cancellation}
 	\begin{figure}[H]
 		\centering
-		\begin{subfigure}[b]{0.48\textwidth}
+		\begin{subfigure}[t]{0.53\textwidth}
 			\centering
 			\includegraphics[width=\linewidth]{Images/h-rc-freq}
-			\caption{Simulated Raised Cosine Filter Frequency Response from ($\beta = 0.2$, $taps = 301$, $OSF = 8$).}
-			\label{fig:h-rc-freq}
+			\caption{RC Filter Frequency Response ($\beta = 0.2$).}
+			\label{fig:h-rc-freq_compact}
 		\end{subfigure}
-		\hfill % This will add horizontal space between the subfigures
-		\begin{subfigure}[b]{0.48\textwidth}
+		\hfill
+		\begin{subfigure}[t]{0.46\textwidth}
 			\centering
 			\includegraphics[width=\linewidth]{Images/h-rc}
-			\caption{Simulated Normalized RC and RRC filter Impulse Responses, with $h(kT_{symb})$ illustrating ISI cancellation.}
-			\label{fig:h-rc}
+			\caption{Normalized RC and RRC Impulse Responses.}
+			\label{fig:h-rc_compact}
 		\end{subfigure}
-		\caption{Simulated characteristics of the Nyquist filtering: frequency response (left) and impulse responses (right).}
+		\caption{Simulated Nyquist filter characteristics.}
 		\label{fig:nyquist-filter-combined}
 	\end{figure}
 	
-	The overall RC filter $h(t)$ confines signal energy to bandwidth $B = R_{symb} (1+\beta)/2$, where $R_{symb} = 1/T_{symb}$. Figure \ref{fig:h-rc-freq} shows the simulated $H(f)$ (from Eq. \ref{eq:rc_response_part1}), confirming spectral confinement with its passband, roll-off, and stopband. For project parameters ($R_{symb} = !!!!!!!!!!$ and $\beta = 0.2$), $B = 0.6 R_{symb}$.
-	
-	In the time domain, $h(t)$ when sampled at $T_{symb}$ intervals approximates a Dirac delta, satisfying Eq. \ref{eq:nyquist_criterion_part1} for zero ISI. Figure \ref{fig:h-rc} shows the simulated $h(t)$; stems at $h(kT_{symb})$ (unity at $t=0$, zero elsewhere) confirm ISI elimination by nullifying other symbols' contributions at the optimal sampling instant.
-	
-	
-	\subsection{Noise Addition and Performance Evaluation}
-	AWGN, representing cumulative interference and thermal noise, limits performance. In the simulated baseband model, the received signal $r(t)$ is $s(t)$ (output of $g(t)$) plus complex baseband noise $n(t)$:
+	\subsection{Noise Modeling and Performance Evaluation}
+	AWGN $n(t)$ is added to the signal $s(t)$, so $r(t) = s(t) + n(t)$. After matched filtering and sampling, $y[k] = I[k] + n_o[k]$, where $n_o[k]$ is complex Gaussian noise with variance $N_0/2$ per component. System performance is measured by the Bit Error Rate (BER) as a function of $E_b/N_0$. The theoretical BER, denoted as $P_b$, for M-QAM is approximately:
 	\begin{equation}
-		r(t) = s(t) + n(t)
+		P_b \approx \frac{4}{\log_2 M} \left(1 - \frac{1}{\sqrt{M}}\right) Q\left(\sqrt{\frac{3 (\log_2 M)^2}{M-1} \frac{E_b}{N_0}}\right)
 	\end{equation}
-	\par
-	The noise $n(t)$ is complex Gaussian, with independent real/imaginary components, each with Power Spectral Density (PSD) $N_0/2$. After matched filtering with $g^*(-t)$ and sampling at $t = kT_{symb}$, the $k$-th received sample is $y[k] = (r(t) \otimes g^*(-t))|_{t=kT_{symb}}$. Since the signal component of $r(t)$ is $\sum_m I[m]g(t-mT_{symb})$, and $h(t) = g(t) \otimes g^*(-t)$ satisfies the Nyquist criterion (Eq. \ref{eq:nyquist_criterion_part1}, with $h(0)$ normalized to 1):
-	\begin{align}
-		y[k] &= \left( \left(\sum_m I[m]g(t-mT_{symb})\right) \otimes g^*(-t) \right)\Big|_{t=kT_{symb}} + (n(t) \otimes g^*(-t))|_{t=kT_{symb}} \nonumber \\
-		&= \sum_m I[m]h((k-m)T_{symb}) + n_o[k] \nonumber \\
-		&= I[k]h(0) + \sum_{m \neq k} I[m]h((k-m)T_{symb}) + n_o[k] \nonumber \\
-		&= I[k] + n_o[k] \label{eq:yk_plus_noise}
-	\end{align}
-	where $I[k]$ is the transmitted complex symbol and $n_o[k] = (n(t) \otimes g^*(-t))|_{t=kT_{symb}}$ is the filtered and sampled noise. The noise samples $n_o[k]$ are complex Gaussian, as $n(t)$ is white Gaussian and matched filtering is linear. Real/imaginary components of $n_o[k]$ are independent, each with variance $\sigma^2 = N_0/2$.
-	
-	System performance is evaluated by simulating Bit Error Rate (BER) vs. $E_b/N_0$, based on Eq. \ref{eq:yk_plus_noise}. To simulate at a specific $E_b/N_0$, noise power $n_o[k]$ is set relative to signal power. Average symbol energy $E_s = \text{E}\left[|I[k]|^2\right]$. Average bit energy $E_b = E_s / b = E_s / \log_2 M$ (M-QAM, $b$ bits/symbol). Then, $N_0 = E_b / (E_b/N_0)_{\text{target}}$. The complex noise $n_o[k]$ added per Eq. \ref{eq:yk_plus_noise} has total variance $N_0$ (real/imaginary components each $N_0/2$).
-	
-	Experimental BER is:
-	\begin{equation}
-		\text{BER}_{\text{exp}} = \frac{\text{Number of erroneously detected bits}}{\text{Total number of transmitted bits}}
-	\end{equation}
-	Simulated BER vs. $E_b/N_0$ is compared to theoretical $P_b$ for M-QAM (square, Gray coded, moderate/high $E_b/N_0$):
-	\begin{equation}
-		P_b \approx \frac{4}{\log_2 M} \left(1 - \frac{1}{\sqrt{M}}\right) Q\left(\sqrt{\frac{3 (\log_2 M)}{M-1} \frac{E_s}{N_0}}\right) = \frac{4}{\log_2 M} \left(1 - \frac{1}{\sqrt{M}}\right) Q\left(\sqrt{\frac{3 (\log_2 M)^2}{M-1} \frac{E_b}{N_0}}\right)
-		\label{eq:Pb_MQAM_Eb_cont_final}
-	\end{equation}
-	where $Q(x) = \frac{1}{\sqrt{2\pi}} \int_x^\infty e^{-u^2/2} du$.
-	
-	Figure \ref{fig:ber-mod_cont} shows simulated BER for various QAMs, illustrating the spectral vs. power efficiency trade-off: higher-order modulations offer higher data rates but need more power for the same BER.
+	Figure \ref{fig:ber-mod_cont} validates theoretical BER curves. Higher-order QAMs achieve higher data rates but require more power. Figure \ref{fig:constellations-noise_cont} shows the effect of AWGN on 16-QAM symbols before and after matched filtering, the latter showing tighter clusters due to the Signal-to-Noise Ratio (SNR) maximization property of matched filtering.
 	
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.8\linewidth]{Images/ber-mod.png}
-		\caption{Simulated BER vs. $E_b/N_0$ for various modulation types}
+		\includegraphics[width=0.7\linewidth]{Images/ber-mod.png}
+		\caption{Simulated BER vs. $E_b/N_0$ for various modulation types.}
 		\label{fig:ber-mod_cont}
 	\end{figure}
 	
-	Figure \ref{fig:constellations-noise_cont} shows AWGN's effect on 16-QAM constellations. Figure \ref{fig:const-noisy_cont} displays symbols $s(t)+n(t)$ pre-matched filter. Post-matched filtering and downsampling ($y[k]=I[k]+n_o[k]$), symbols in Fig. \ref{fig:const-filtered-down_cont} cluster around ideal points, validating the matched filter's SNR maximization.
-	
 	\begin{figure}[H]
 		\centering
-		\begin{subfigure}{0.48\textwidth}
+		\begin{subfigure}{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/const-noisy.png}
-			\caption{Simulated noisy 16-QAM symbols before matched filter.}
-			\label{fig:const-noisy_cont}
+			\caption{Noisy 16-QAM before matched filtering.}
+			\label{fig:const-noisy_cont_compact}
 		\end{subfigure}\hfill
-		\begin{subfigure}{0.48\textwidth}
+		\begin{subfigure}{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/const-filtered-down.png} 
-			\caption{Simulated 16-QAM symbols after matched filtering and downsampling.}
-			\label{fig:const-filtered-down_cont}
+			\caption{16-QAM after matched filtering.}
+			\label{fig:const-filtered-down_cont_compact}
 		\end{subfigure}
-		\caption{Simulation - Effect of AWGN and matched filtering on a 16-QAM constellation ($\frac{E_b}{N_0} = 15$ dB)}
+		\caption{Effect of AWGN and matched filtering on 16-QAM ($\frac{E_b}{N_0} = 15 \text{ dB}$).}
 		\label{fig:constellations-noise_cont}
 	\end{figure}
 	
+	\subsection{Questions: Optimal Communication Chain}
+	\par\noindent\textbf{It is proposed to use the baseband equivalent model of the AWGN channel. Would it be possible to work with a bandpass implementation of the system? :}\quad\ignorespaces 
+		Working with baseband equivalent models reduces complexity by avoiding high carrier frequencies, allowing lower simulation sampling rates and modular design of modulation/demodulation stages.
+	\par
+	
+	\par\noindent\textbf{How do you choose the sample rate in Matlab? :}\quad\ignorespaces 
+		The Matlab sampling rate $F_s$ must be at least twice the maximum signal frequency $F_{\text{max}}$ (Nyquist criterion) to prevent aliasing. For an RRC filter with roll-off $\beta$, the maximum frequency is
+		\begin{equation} F_{\text{max}} = \frac{1+\beta}{2T_{\text{symb}}} \end{equation}
+		Thus, the oversampling factor $M$ must ensure
+		\begin{equation} F_s = M/T_{\text{symb}} \ge 2 F_{\text{max}} \end{equation}
+	\par
+	
+	\par\noindent\textbf{How do you make sure you simulate the desired $E_b/N_0$ ratio? :}\quad\ignorespaces 
+		Noise power is 
+		\begin{equation} P_n = N_0 F_s \end{equation}
+		$N_0$ is derived from the target $E_b/N_0$ and calculated bit energy $E_b$. $E_b$ is given by
+		\begin{equation} E_b = \frac{E_s}{\log_2(M)} \end{equation}
+		where $E_s$ is average symbol energy. Complex noise $n(t)$ is generated as
+		\begin{equation} n(t) = \sqrt{\frac{P_n}{2}}(X+jY) \end{equation}
+		with 
+		\begin{equation} X, Y \sim \mathcal{N}(0,1) \end{equation}
+	\par
+	
+	\par\noindent\textbf{How do you choose the number of transmitted data packets and their length? :}\quad\ignorespaces 
+		The number of bits per packet must be a multiple of $\log_2(M)$ for M-QAM to avoid unused bits. Total transmitted bits must be sufficient for statistically relevant BER estimation, typically such that at least 10-100 errors are observed for the target BER.
+	\par
+			
+	\par\noindent\textbf{Determine the supported (uncoded) bit rate as a function of the physical bandwidth? :}\quad\ignorespaces 
+		The two-sided Nyquist bandwidth is
+		\begin{equation} B = \frac{1+\beta}{T_{\text{symb}}} \end{equation}
+		The bit rate $R_b$ is
+		\begin{equation} R_b = \frac{\log_2 M}{T_{\text{symb}}} = (\log_2 M) \cdot R_{\text{symb}} \end{equation}
+		Thus,
+		\begin{equation} R_b = R_{\text{symb}} \cdot \log_2 M = \frac{B}{1+\beta} \log_2 M \end{equation}
+	\par
+			
+	\par\noindent\textbf{Explain the trade-off communication capacity/reliability achieved by varying the constellation size? :}\quad\ignorespaces 
+		Larger constellations (higher M) increase capacity (more bits/symbol, higher $R_b$ for fixed bandwidth). However, constellation points are closer, reducing Euclidean distance and increasing susceptibility to noise, thus degrading BER for a given $E_b/N_0$ (lower reliability).
+	\par
+			
+	\par\noindent\textbf{Why do we choose the halfroot Nyquist filter to shape the complex symbols? :}\quad\ignorespaces 
+		RRC filters are used because: 1) When paired (transmitter and matched receiver filter), they form an overall Nyquist filter, ensuring zero ISI at correct sampling instants. 2) The matched filter maximizes SNR at the detector input. 3) They provide good spectral containment.
+	\par
+			
+	\par\noindent\textbf{How do we implement the optimal demodulator? Give the optimisation criterion? :}\quad\ignorespaces 
+		The optimal demodulator for AWGN channels uses a filter matched to the transmitted pulse shape $g(t)$, i.e., $g^*(-t)$, followed by sampling at symbol instants $kT_{\text{symb}}$. This maximizes the output SNR.
+	\par
+			
+	\par\noindent\textbf{How do we implement the optimal detector? Give the optimisation criterion? :}\quad\ignorespaces 
+		The optimal detector minimizes symbol error probability. For equiprobable symbols in AWGN, this corresponds to the Maximum Likelihood (ML) criterion: choose symbol $s_m$ that maximizes $p(r|s_m)$. This simplifies to minimizing the Euclidean distance:
+		\begin{equation} \hat{s}_{\text{ML}} = \operatorname*{arg\,min}_{s_m} ||r - s_m||^2 \end{equation}
+	\par
+			
 	\section{Time and Frequency Synchronization}
-	\subsection{The Problem of Synchronization}
+	Synchronization aims to align the receiver's timing and carrier frequency with those of the transmitter. Errors include Carrier Frequency Offset ($\Delta f$), Phase Offset ($\phi_0$), and Sample Time Shift ($t_0$), illustrated in Figure \ref{fig:sync-errors-conceptual}.
+			
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.8\linewidth]{sync-errors-conceptual} % Path: Images/sync-errors-conceptual
-		\caption{Synchronization mismatches at the receiver}
+		\includegraphics[width=0.6\linewidth]{Images/sync-errors-conceptual} 
+		\caption{Synchronization mismatches.}
 		\label{fig:sync-errors-conceptual}
 	\end{figure}
-	Accurate demodulation requires transmitter-receiver synchronization: precise symbol sampling instances and carrier frequency/phase alignment. Errors stem from independent local oscillators (frequency deviations from manufacturing/environment) and propagation delay (unknown phase shift, timing offset).
-	\par
-	Key synchronization errors:
-	\begin{itemize}
-		\item Carrier Frequency Offset (CFO), $\Delta f$: Difference between transmitter's and receiver's carrier frequencies.
-		\item Carrier Phase Offset, $\phi_0$: Phase difference between incoming carrier and receiver's local oscillator.
-		\item Sample Clock Offset (SCO), $\delta$: Frequency mismatch between transmitter's DAC clock and receiver's ADC clock (considered negligible and not implemented).
-		\item Sample Time Shift, $t_0$: Receiver's uncertainty about symbol arrival time, necessitating optimal sampling instant determination.
-	\end{itemize}
-	Figure \ref{fig:sync-errors-conceptual} illustrates these mismatches: symbols generated at $nT_{symb}$ are effectively sampled at $nT_{symb}(1+\delta)+t_0$ by the receiver.
+	
+	\subsection{Impact Assessment of CFO and Carrier Phase Error}
+	Synchronization errors degrade performance. A Phase Offset ($\phi_0$) rotates the received constellation, meaning $y[n] = I[n]e^{j\phi_0}$, whereas a Carrier Frequency Offset ($\Delta f$) causes a progressive phase drift and can also lead to ISI due to mismatch with the receiver's filter. 
+	\begin{equation} y[n] = I[n]e^{j(2\pi \Delta f nT_{\text{symb}} + \phi_0')} \end{equation}
 	
 	
-	\subsection{Impact of Synchronization Errors on Performance}
-	\subsubsection{Impact of Carrier Phase Offset ($\phi_0$)}
-	A static carrier phase offset $\phi_0$ rotates the received constellation by $\phi_0$. With perfect timing, no CFO, and no noise, a transmitted symbol $I[n]$ becomes at the matched filter output:
-	\begin{equation}
-		y[n] = I[n]e^{j\phi_0}
-	\end{equation}
-	Uncorrected rotation causes detection errors. Figure \ref{fig:cfo-po-sub} illustrates the smearing of constellation points due to phase offset and CFO. The BER degradation from pure phase offset results in a performance floor or significant penalty depending on $\phi_0$'s magnitude.
+	\subsection{Impact Assessment of Sample Time Shift}
+	A Sample Time Shift ($t_0$) also degrades performance by causing signal attenuation and ISI, as described by:
+	\begin{equation} y[n] = I[n]h(t_0) + \sum_{m \neq n} I[m]h((n-m)T_{\text{symb}} + t_0) \end{equation}
 	
-	\subsubsection{Impact of Carrier Frequency Offset ($\Delta f$)}
-	\begin{figure}[H]
-		\centering
-		\includegraphics[width=0.8\linewidth]{Images/ber-cfo}
-		\caption{Simulated BER vs. $E_b/N_0$ for 16-QAM with varying CFO, illustrating the ISI impact.}
-		\label{fig:ber-cfo}
-	\end{figure}
-	With CFO $\Delta f$, the pre-matched filter signal is $r(t)e^{j(2\pi \Delta f t + \phi_0)}$. The impact of CFO is twofold:
-	\begin{enumerate}
-		\item Phase Drift: At the matched filter output, if CFO is uncompensated, sampled symbols $y[n] = I[n]e^{j(2\pi \Delta f nT_{symb} + \phi_0')}$ exhibit progressive phase rotation. This smears constellation points into arcs, as depicted in Figure \ref{fig:cfo-po-sub}.
-		\item Inter-Symbol Interference (ISI): Significant CFO shifts the transmitted signal $s(t)$ spectrum. If uncorrected before the matched filter $g^*(-t)$, the filter is no longer matched to $g(t)e^{j2\pi \Delta f t}$. This mismatch causes SNR loss and introduces ISI because $h'(t) = (g(t)e^{j2\pi \Delta f t}) \otimes g^*(-t)$ no longer perfectly satisfies the Nyquist zero-ISI criterion. Figure \ref{fig:ber-cfo} quantifies this BER degradation for 16-QAM under different CFO values. A CFO of 50-100 ppm leads to a significant $E_b/N_0$ penalty or an error floor.
-	\end{enumerate}
-	
-	\subsubsection{Impact of Sample Time Shift ($t_0$)}
-	\begin{figure}[H]
-		\centering
-		\includegraphics[width=0.8\linewidth]{Images/ber-timing}
-		\caption{Simulated BER vs. $E_b/N_0$ for 16-QAM with varying timing offsets $t_0/T_{symb}$.}
-		\label{fig:ber-timing}
-	\end{figure}
-	An incorrect sampling instant $t_0 \neq 0$ means sampling the matched filter output $h(t)$ at $nT_{symb} + t_0$. The received sample, sans noise, is:
-	\begin{align}
-		y[n] &= \sum_m I[m]h((n-m)T_{symb} + t_0) \\
-		&= I[n]h(t_0) + \sum_{m \neq n} I[m]h((n-m)T_{symb} + t_0) \label{eq:timing_offset_impact_revised_style_change}
-	\end{align}
-	The term $I[n]h(t_0)$ is the attenuated symbol ($h(t_0) < h(0)$ for $t_0 \neq 0$). The sum is ISI ($h(kT_{symb} + t_0) \neq 0$ for $k \neq 0, t_0 \neq 0$). Figure \ref{fig:ber-timing} shows BER degradation for 16-QAM with increasing $t_0$. Fractional deviations like $0.1 T_{symb}$ to $0.2 T_{symb}$ cause severe performance loss. Figure \ref{fig:cfo-po-to-sub} visually shows the combined detrimental effects of CFO, phase offset, and timing offset.
-	
+	Figures \ref{fig:ber_sync_errors} and \ref{fig:const_sync_errors} show these impacts on BER and 16-QAM constellations.
+				
 	\begin{figure}[H]
 		\centering
 		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{Images/ber-cfo}
+			\caption{BER vs. $E_b/N_0$ for varying CFO.}
+			\label{fig:ber-cfo_compact}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{Images/ber-timing}
+			\caption{BER vs. $E_b/N_0$ for varying $t_0/T_{\text{symb}}$.}
+			\label{fig:ber-timing_compact}
+		\end{subfigure}
+		\caption{Impact of CFO and timing errors on BER for 16-QAM.}
+		\label{fig:ber_sync_errors}
+	\end{figure}
+			
+	\begin{figure}[H]
+		\centering
+		\begin{subfigure}[t]{0.4\textwidth}
 			\centering
 			\includegraphics[width=\linewidth]{Images/cfo-po}
-			\caption{16-QAM Constellation after CFO (20 ppm) and Phase Offset ($\pi/8$). $E_b/N_0 = 20$ dB.}
-			\label{fig:cfo-po-sub}
+			\caption{Constellation with CFO and Phase Offset.}
+			\label{fig:cfo-po-sub_compact}
 		\end{subfigure}
-		\hfill  
-		\begin{subfigure}[b]{0.48\textwidth}
+		\hfill
+		\begin{subfigure}[t]{0.4\textwidth}
 			\centering
 			\includegraphics[width=\linewidth]{Images/cfo-po-to}
-			\caption{16-QAM Constellation after CFO (20 ppm), Phase Offset ($\pi/8$) and time offset ($t_0 = 0.1 T_{symb}$). $E_b/N_0 = 20$ dB.}
-			\label{fig:cfo-po-to-sub}
+			\caption{Constellation with CFO, Phase Offset, and Time Offset.}
+			\label{fig:cfo-po-to-sub_compact}
 		\end{subfigure}
-		\caption{Simulated Constellation diagrams: impact of synchronization errors on 16-QAM.}
-		\label{fig:cfo-combined_style_change}
+		\caption{Impact of synchronization errors on 16-QAM constellation ($E_b/N_0 = 20 \text{ dB}$).}
+		\label{fig:const_sync_errors}
 	\end{figure}
 	
-	\subsection{Gardner Algorithm for Timing Recovery}
-	The Gardner algorithm is a non-data-aided (NDA) feedback algorithm correcting sampling time errors. It estimates and corrects the normalized time shift $\epsilon[n]$ progressively.
-	
-
-	The algorithm observes samples at symbol instants and midway between them. The timing estimate $\hat{\epsilon}[n]$ update equation at symbol time $n$ is:
+	\subsection{Gardner Algorithm Implementation}
+	The Gardner algorithm is a Non data-aided (NDA) feedback loop that determine an  estimate $\hat{\epsilon}[n]$ of the sampling time errors $\epsilon[n]$, such that: 
 	\begin{equation}
-		\hat{\epsilon}[n+1] = \hat{\epsilon}[n] - \kappa \cdot \text{Re} \left\{ y_{\hat{\epsilon}[n]}[n-1/2] \left( y_{\hat{\epsilon}[n]}^{*}[n] - y_{\hat{\epsilon}[n-1]}^{*}[n-1] \right) \right\}
-		\label{eq:gardner_update_style_change}
+		\hat{\epsilon}[n+1] = \hat{\epsilon}[n] - \kappa \cdot \operatorname{Re} \left\{ y_{\hat{\epsilon}[n]}[n-1/2] \left( y_{\hat{\epsilon}[n]}^{*}[n] - y_{\hat{\epsilon}[n-1]}^{*}[n-1] \right) \right\}
 	\end{equation}
-	where:
-	\begin{itemize}
-		\item $\hat{\epsilon}[n]$ is the current normalized time error estimate.
-		\item $\kappa$ is the loop gain (error weight), controlling convergence and stability.
-		\item $y_{\hat{\epsilon}[n]}[n]$ is the sample at the estimated correct timing for symbol $n$.
-		\item $y_{\hat{\epsilon}[n]}[n-1/2]$ is the sample midway between estimated correct timings for symbols $n-1$ and $n$.
-		\item $(y_{\hat{\epsilon}[n]}^{*}[n] - y_{\hat{\epsilon}[n-1]}^{*}[n-1])$ approximates the signal slope.
-	\end{itemize}
-	The algorithm requires two input samples per symbol. The error term's sign indicates shift direction; its magnitude indicates extent.
-	
-
-	Figure \ref{fig:gardner1} illustrates the mean time error $\hat{\epsilon}[n]$ convergence to the true time shift for various loop gains $\kappa$. Smaller $\kappa$ yields slower convergence but less steady-state jitter; larger $\kappa$ speeds convergence but increases jitter or causes instability.
-	
-	The Gardner algorithm is robust to CFO and phase offsets. Figure \ref{fig:gardner2} demonstrates this robustness, showing convergence under various CFO conditions. Performance remains stable for typical CFO values.
-	
-	\begin{figure}[H]
-		\centering
-		\includegraphics[width=0.7\linewidth]{Images/Gardner_k_list.jpg} 
-		\caption{Simulated Gardner algorithm time error estimate convergence for different loop gain values ($\kappa$). The plot shows mean estimated time error vs. symbol number, converging to the applied time shift.}
-		\label{fig:gardner1}
-	\end{figure}
-	
-	\begin{figure}[H]
-		\centering
-		\includegraphics[width=0.7\linewidth]{Images/Gardner_CFO_robust.jpg} 
-		\caption{Simulated Gardner algorithm robustness to Carrier Frequency Offset (CFO). The plot shows time error estimate convergence for a fixed $\kappa$ under different CFOs, demonstrating minimal impact.}
-		\label{fig:gardner2}
-	\end{figure}
-	
-	\subsection{Frame and Frequency Acquisition}
-	After timing recovery, frame synchronization (detecting pilot sequence start) and coarse CFO acquisition use a differential cross-correlator.
-	
-	\paragraph{Principle using Differential Cross-Correlator:}
-	The differential cross-correlator output metric $D_k[n]$ is:
-	\begin{equation}
-		D_k[n] = \frac{1}{N_p-k} \sum_{l=k}^{N_p-1} (y^*[n+l]a[l])(y^*[n+l-k]a[l-k])^*
-		\label{eq:diff_corr_metric_style_change}
-	\end{equation}
-	where $y[n]$ is the received sequence (post-Gardner), $a[l]$ is the pilot sequence of length $N_p$, and $k$ is a time shift. This metric multiplies two time-shifted windows of the pilot-received signal correlation.
-	
-	Pilot start position $\hat{n}$ (frame sync) is estimated by maximizing summed $|D_k[n]|$ over $k \in [1, K_{avg}]$:
-	\begin{equation}
-		\hat{n} = \text{arg max}_n \sum_{k=1}^{K_{avg}} |D_k[n]|
-		\label{eq:frame_sync_est_style_change}
-	\end{equation}
-	
-	CFO $\hat{\Delta f}$ is then estimated from $D_k[\hat{n}]$ phase at $\hat{n}$:
-	\begin{equation}
-		\hat{\Delta f} = -\frac{1}{K_{avg}} \sum_{k=1}^{K_{avg}} \frac{\angle D_k[\hat{n}]}{2\pi k T_{symb}}
-		\label{eq:cfo_est_diff_corr_style_change}
-	\end{equation}
-	The differential nature provides CFO robustness.
-	
-	Performance is evaluated by estimation error variance for $\hat{n}$ and $\hat{\Delta f}$ versus $E_b/N_0$, pilot length $N_p$, and averaging window $K_{avg}$.
-	
+	Figure \ref{fig:gardner_performance} (a) shows convergence for different loop gains $\kappa$, and (b) demonstrates robustness to CFO.
+			
 	\begin{figure}[H]
 		\centering
 		\begin{subfigure}[b]{0.48\textwidth}
 			\centering
+			\includegraphics[width=\linewidth]{Images/Gardner_k_list.jpg} 
+			\caption{Convergence for different $\kappa$.}
+			\label{fig:gardner1_compact}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{Images/Gardner_CFO_robust.jpg} 
+			\caption{Robustness to CFO.}
+			\label{fig:gardner2_compact}
+		\end{subfigure}
+		\caption{Gardner algorithm performance: time error convergence.}
+		\label{fig:gardner_performance}
+	\end{figure}
+	
+	\subsection{Frame and Frequency Acquisition Implementation}		
+	Frame acquisition and coarse CFO estimation are performed using a data-aided (DA) differential cross-correlator. The differential cross-correlator $D_k[n]$ is computed from the known pilot sequence $a[l]$ as follows:
+	\begin{equation}
+		D_k[n] = \frac{1}{N-k} \sum_{l=k}^{N-1} (y^*[n+l]a[l])(y^*[n+l-k]a[l-k])^* \label{eq:diff_corr_metric_style_change}
+	\end{equation}
+	The pilot starting index $\hat{n}$, which is the Time of Arrival (ToA) of the pilot sequence is found by:
+	\begin{equation} \hat{n} = \operatorname*{arg\,max}_n \sum_{k=1}^{K} |D_k[n]| \end{equation}
+	The estimate of the CFO $\hat{\Delta f}$ is expressed as:
+	\begin{equation} \hat{\Delta f} = -\frac{1}{K} \sum_{k=1}^{K} \frac{\angle D_k[\hat{n}]}{2\pi k T_{\text{symb}}} \end{equation}
+	Figures \ref{fig:acquisition_vs_pilot_len_compact} and \ref{fig:acquisition_vs_K_avg_compact} show ToA and CFO estimation error standard deviations versus $E_b/N_0$ for varying pilot lengths $N$ and averaging windows $K$, respectively. As expected, longer pilot sequences and an optimized averaging window $K$  lead to improved estimation accuracy.
+			
+	\begin{figure}[H]
+		\centering
+		\begin{subfigure}[b]{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/frame_sync_pilot_len.png} 
-			\caption{ToA error std dev vs. $E_b/N_0$.}
-			\label{fig:frame_sync_pilot_len_style_change}
+			\caption{ToA error std dev vs. $N$}
 		\end{subfigure}
 		\hfill
-		\begin{subfigure}[b]{0.48\textwidth}
-			\centering
+		\begin{subfigure}[b]{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/cfo_est_pilot_len.png} 
-			\caption{CFO error std dev vs. $E_b/N_0$.}
-			\label{fig:cfo_est_pilot_len_style_change}
+			\caption{CFO error std dev vs. $N$}
 		\end{subfigure}
-		\caption{Simulated standard deviation of Time-of-Arrival (ToA) and CFO estimation error vs. $E_b/N_0$ for different pilot sequence lengths ($N_p$). Longer pilots reduce error variance.}
-		\label{fig:acquisition_vs_pilot_len}
+		\caption{Acquisition error vs. $E_b/N_0$ for different pilot lengths ($N$).}
+		\label{fig:acquisition_vs_pilot_len_compact}
 	\end{figure}
-	
+			
 	\begin{figure}[H]
 		\centering
-		\begin{subfigure}[b]{0.48\textwidth}
-			\centering
+		\begin{subfigure}[b]{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/frame_sync_K_avg.png} 
-			\caption{ToA error std dev vs. $E_b/N_0$.}
-			\label{fig:frame_sync_K_avg_style_change}
+			\caption{ToA error std dev vs. $K$.}
 		\end{subfigure}
 		\hfill
-		\begin{subfigure}[b]{0.48\textwidth}
-			\centering
+		\begin{subfigure}[b]{0.4\textwidth}
 			\includegraphics[width=\linewidth]{Images/cfo_est_K_avg.png} 
-			\caption{CFO error std dev vs. $E_b/N_0$.}
-			\label{fig:cfo_est_K_avg_style_change}
+			\caption{CFO error std dev vs. $K$.}
 		\end{subfigure}
-		\caption{Simulated standard deviation of ToA and CFO estimation error vs. $E_b/N_0$ for different averaging window sizes ($K_{avg}$).}
-		\label{fig:acquisition_vs_K_avg}
+		\caption{Acquisition error vs. $E_b/N_0$ for different averaging windows ($K$).}
+		\label{fig:acquisition_vs_K_avg_compact}
+	\end{figure}
+
+	Further investigation into the robustness of the differential cross-correlator focuses on its performance in the presence of an existing CFO. Figure~\ref{fig:robustness-combined}(a) illustrates the standard deviation of the CFO estimation error against the $E_b/N_0$ ratio for various initial CFO values (0 ppm, 2 ppm, and 20 ppm) with a fixed timing offset $t_0 = 0.03T_{\text{symb}}$. The plot demonstrates that the CFO estimation accuracy improves with increasing $E_b/N_0$. Importantly, the performance is largely resilient to the initial CFO levels tested, with all three curves closely overlapping, indicating the estimator's robustness in accurately determining the CFO even when significant frequency offsets are already present.
+	Similarly, the robustness of the Time of Arrival estimation to an existing CFO is presented in Figure~\ref{fig:robustness-combined}(b). This subfigure shows the standard deviation of the ToA error (in samples) as a function of $E_b/N_0$ under the same set of initial CFOs and timing offset. The ToA estimation performance significantly improves as $E_b/N_0$ increases, with the error dropping and then plateauing at very low levels for $E_b/N_0 > 2 \text{ dB}$. While the presence of a small initial CFO like 2 ppm has a negligible impact compared to the no-CFO case, a larger CFO (20 ppm) introduces a noticeable degradation, particularly at very low $E_b/N_0$ (around 0 dB), where the ToA error is higher. However, for $E_b/N_0$ values above approximately 2 dB, the ToA estimation remains highly accurate and robust even in the presence of a 20 ppm CFO.
+
+	\begin{figure}[H]
+		\centering
+		\begin{subfigure}[b]{0.4\textwidth} 
+			\centering
+			\includegraphics[width=\linewidth]{Images/robust-cfo.png}
+			\caption{CFO estimation error vs. $E_b/N_0$.} 
+			\label{fig:robust-cfo-sub}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.4\textwidth} 
+			\centering
+			\includegraphics[width=\linewidth]{Images/robust-toa.png}
+			\caption{ToA estimation error vs. $E_b/N_0$.} 
+			\label{fig:robust-toa-sub}
+		\end{subfigure}
+		\caption{Robustness of CFO and ToA estimation to pre-existing CFO values (4-QAM, $N=40$, $K=8$, $t_0 = 0.03T_{\text{symb}}$).}
+		\label{fig:robustness-combined}
 	\end{figure}
 	
-	Figures \ref{fig:acquisition_vs_pilot_len} and \ref{fig:acquisition_vs_K_avg} show these impacts. Longer pilots $N_p$ improve accuracy. An optimal $K_{avg}$ balances performance and complexity. Frame acquisition robustness to CFO is also verified.
+        \subsection{Validation of the Communication chain}
+        \begin{figure}[H]
+		\centering
+		\includegraphics[width=0.55\linewidth]{Images/const-corrected.png} 
+		\caption{16-QAM; No Noise; $\mathrm{CFO = 2 ppm}$; $\mathrm{t_0 = 0.1 T_{symb}}$; $\text{Numbits} = \text{Nbps} \times 2^{12}$; $\kappa = 0.1$; $\text{K} = 16$; $\mathrm{N = floor(length(symb_{tx}) \times 0.4)}$}
+		\label{fig:const-corrected-after-sync}
+	\end{figure}
+        From the transmitter, to the receiver, the signal goes through each element of the communication chain. At the receiver, the synchronization pipeline is mainly: 1) Timing Recovery (Gardner), 2) Frame Acquisition, 3) Coarse CFO Acquisition 4) Compensation. This order ensures robustness. Figure \ref{fig:const-corrected-after-sync} visually confirms the significant improvement in constellation clarity after Gardner and Frame/CFO acquisition, thus validating the communication chain.
 	
 	
-	
+			
+	\subsection{Questions: Time and Frequency Synchronization}
+	\par\noindent\textbf{Derive analytically the baseband model of the channel including the synchronisation errors? :}\quad\ignorespaces 
+		Received baseband signal is
+		\begin{equation} \tilde{r}_e(t) = \tilde{s}(t-\epsilon T_{\text{symb}} - t_0) e^{j(2\pi\Delta f t + \phi_0)} \end{equation}
+		where $\tilde{s}(t)$ is ideal transmitted baseband signal, $\epsilon$ is normalized clock offset, $t_0$ time shift, $\Delta f$ CFO, $\phi_0$ phase offset. For sampling at $nT_{\text{symb}}(1+\delta)+t_0'$, considering $y[n]$ as output of matched filter and ADC.
+	\par
+			
+	\par\noindent\textbf{How do you separate the impact of the carrier phase drift and ISI due to the CFO in your simulation? :}\quad\ignorespaces 
+		Phase drift from CFO is 
+		\begin{equation} e^{j2\pi \Delta f nT_{\text{symb}}} \end{equation}
+		on symbols $I[n]$. ISI results from $g(t)e^{j2\pi\Delta ft}$ convolved with $g^*(-t)$ not being a perfect Nyquist pulse. To see ISI alone, multiply received symbols by 
+		\begin{equation} e^{-j2\pi \Delta f nT_{\text{symb}}} \end{equation}
+		after matched filtering to remove coherent phase rotation, then observe BER degradation.
+	\par
+			
+	\par\noindent\textbf{How do you simulate the sampling time shift in practice? :}\quad\ignorespaces 
+		Increase sampling rate by large factor $M_{\text{os}}$ pre-filter. A shift of $k$ samples at this high rate corresponds to
+		\begin{equation} t_0 = k \cdot \frac{T_{\text{symb}}}{M_{\text{os}}} \end{equation}
+		Alternatively, use interpolation on the oversampled signal at the receiver output to estimate values at $nT_{\text{symb}} + t_0$.
+	\par
+			
+	\par\noindent\textbf{How do you select the simulated $E_b/N_0$ ratio? :}\quad\ignorespaces 
+		$E_b/N_0$ must be high enough for synchronization algorithms to lock and provide meaningful performance metrics without being dominated by noise failures. Typically, choose values where uncoded BER is reasonably low (e.g., $10^{-2}$ to $10^{-4}$), or a typical operating point. For some algorithms, a minimum $E_b/N_0$ (e.g., > 4-6 dB) is needed for reliable acquisition, as seen in frame/frequency acquisition plots.
+	\par
+			
+	\par\noindent\textbf{How do you select the lengths of the pilot and data sequences? :}\quad\ignorespaces 
+		Pilots ($N$): Long enough for accurate ToA/CFO/Phase estimation against noise (e.g., $N \ge 20-40$). Too short leads to high estimation variance.
+		Data: Short enough between pilots to ensure phase drift from residual CFO is < $\pi$ and linear phase change assumption holds.
+		Trade-off: Longer/more frequent pilots improve sync but reduce data throughput (overhead).
+	\par
+			
+	\par\noindent\textbf{In which order are the synchronisation effects estimated and compensated? Why? :}\quad\ignorespaces 
+		1. Timing Recovery (Gardner): Robust to CFO.
+		2. Frame/Frequency Acquisition (Differential Cross-correlator): Uses timed samples to find frame start and correct large CFO.
+		This order allows each stage to operate on a signal pre-processed to mitigate errors that would impair its own performance.
+	\par
+			
+	\par\noindent\textbf{Explain intuitively how the error is computed in the Gardner algorithm. Why is the Gardner algorithm robust to CFO? :}\quad\ignorespaces 
+		The error is:
+		\begin{equation} e[n] = \operatorname{Re} \{ y[n-1/2] ( y^{*}[n] - y^{*}[n-1] ) \} \end{equation}
+		$y[n-1/2]$ is the mid-point sample. $(y^{*}[n] - y^{*}[n-1])$ estimates signal slope. If $y[n-1/2]$ and slope have same sign, timing is late; opposite sign, early. No transition means small slope, small update.
+		Robustness to CFO: CFO causes phase rotation
+		\begin{equation} \Delta\phi = 2\pi \Delta f T_{\text{symb}} \end{equation}
+		between $y[n-1]$ and $y[n]$, and $\Delta\phi/2$ on $y[n-1/2]$. The error term uses $\operatorname{Re}\{\cdot\}$. For small $\Delta\phi$ per symbol (typical CFOs),
+		\begin{equation} e^{j\Delta\phi} \approx 1+j\Delta\phi \end{equation}
+		The dominant terms in the error calculation are less affected by these small phase rotations.
+	\par
+			
+	\par\noindent\textbf{Explain intuitively why the differential cross-correlator is better suited than the usual cross-correlator? Isn't interesting to start the summation at $k=0$ (no time shift)? :}\quad\ignorespaces 
+		Usual cross-correlator 
+		\begin{equation} C[n] = \sum y^*[n+l]a[l] \end{equation}
+		is sensitive to CFO, as CFO rotates $y[n+l]$ causing phase terms 
+		\begin{equation} e^{j2\pi\Delta f (n+l)T_{\text{symb}}} \end{equation}
+		that don't cancel in $|C[n]|$, degrading the peak.
+		Differential cross-correlator (Eq. \ref{eq:diff_corr_metric_style_change}) multiplies two correlation terms with a time lag $k$. The product 
+		\begin{equation} (y^*[n+l]a[l])(y[n+l-k]a^*[l-k]) \end{equation}
+		has phase
+		\begin{equation} e^{-j2\pi\Delta f(n+l)T_{\text{symb}}} \cdot e^{j2\pi\Delta f(n+l-k)T_{\text{symb}}} = e^{-j2\pi\Delta f k T_{\text{symb}}} \end{equation}
+		The phase is proportional to $k\Delta f$, allowing $\Delta f$ estimation. The magnitude is less affected by the absolute phase.
+		Summation for $k=0$:
+		\begin{equation} D_0[n] = \frac{1}{N}\sum |y[n+l]a[l]|^2 \end{equation}
+		which relates to energy detection but doesn't directly use the differential property for CFO estimation. The CFO estimation relies on $k \ge 1$.
+	\par
+			
+	\par\noindent\textbf{Are the frame and frequency acquisition algorithms optimal? If yes, give the optimisation criterion? :}\quad\ignorespaces 
+		The ML criterion for joint ToA ($\hat{n}$) and CFO ($\Delta\omega$) estimation is
+		\begin{equation} (\hat{n},\Delta\omega)= \operatorname*{arg\,max}_{n,\omega} p(y[n]|a,\Delta\omega) \end{equation}
+		Direct implementation is complex (2D search over $n$ and $\omega$). The differential cross-correlator is a near-optimal, lower-complexity approximation. It's not strictly ML optimal because it simplifies the likelihood function or uses derived metrics, often omitting terms like received signal power that an exact ML estimator might include.
+	\par
+
+        \section{Orange Seminar Questions}
+        \subsection{HFC Architecture, Main Components, and Capacity Bottleneck}
+        \noindent\textbf{Question: Describe the architecture of the HFC network and its main components. Where is the capacity bottleneck today?}
+        
+        The Hybrid Fiber-Coax network combines fiber optic and coaxial cables. The headend aggregates signals for transmission. In HFC, the headend includes an optical node converting optical to electrical signals for coax transmission and vice versa. Fiber cables are used for long-distance, large-capacity transmission from servers and data sources. Coaxial cables connect to households, with passive taps splitting the signal. RF amplifiers are placed to boost signals attenuated by losses.
+        
+        The primary capacity bottleneck in current HFC networks is in the upstream direction. Upstream bandwidth is often limited to around 150 MHz supporting 1 to 2 Gbps, while downstream may have 1000 MHz allowing up to 10 Gbps. This asymmetry constrains upstream capacity. Shared bandwidth in the coaxial part and the need for equipment upgrades also contribute to bottlenecks.
+        
+        \subsection{Future Evolution of HFC Networks and Key Technologies}
+        \noindent\textbf{Question: What will be the evolution of the HFC network in the coming years? What are the key technologies to make this happen?}
+        
+        HFC networks will evolve to support higher bandwidths, lower latency, and improve energy efficiency. This evolution will occur in parallel with Fibre To The Premises deployments. The HFC network will use more fiber to extend bandwidth, speed, and reliability.
+        
+        Key technologies driving this evolution include DOCSIS 4.0, which encompasses Extended Spectrum DOCSIS and Full Duplex DOCSIS. Distributed Access Architecture, using Remote PHY or Remote MAC-PHY, moves digital processing closer to users, replacing RF over fiber with Ethernet/IP. Node splitting and fibre deepening will reduce homes per optical node, increasing bandwidth per user. Integration with FTTP solutions like XGS-PON and 50G-PON is also a key aspect. Advanced modems and Wi-Fi 6/7 will support multi-gigabit speeds.
+        
+        \subsection{Typical Incidents on Orange's Network and Mitigation Procedures}
+        \noindent\textbf{Question: Which are the typical incidents happening on Orange's network? Explain the procedure foreseen to cope with them.}
+        
+        Typical incidents on Orange's network are often due to construction works, where digging can accidentally damage underground cables and infrastructure. Damaged wires underground are another common issue.
+        
+        To cope with these, fault locations are estimated, for instance, by timing fiber signals. Repairs for physical disruptions can take at least a few hours. For critical locations such as hospitals and emergency services, redundant lines or backup connections are installed to ensure continuous connectivity. Reconstruction works for high-priority objects are done faster. Active traffic monitoring and capacity management using past data and machine learning are also employed to ensure service continuity.
+        
+        \subsection{Orange Data Center Characteristics}
+        \noindent\textbf{Question: Describe the main Orange's data center in numbers (storage, in/out capacity, consumed power, area, maintenance...).}
+        
+        The Orange data center has a maximum power capacity of 3 MW and currently operates at approximately 1.5 MW. It uses 400 V AC and 48 V DC power distribution systems. The facility employs passive cooling techniques with six cooling blocks and has additional space reserved for future cooling expansion.
+        
+        For backup power, there are two generators, each rated at 750 kW. A fuel tanker can supply energy for up to 72 hours in emergencies. The average transmission rate is in the order of terabytes per second. The center also has redundant area for scaling and reliability.
+    			
 \end{document}

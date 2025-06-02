@@ -28,9 +28,6 @@ iterations          = params.simulation.iterations_per_EbN0;        % Iterations
 EbN0_domain_dB      = params.simulation.EbN0_domain_dB;             % Range of Eb/N0 values to simulate (dB)
 num_EbN0_points     = length(EbN0_domain_dB);                       % Number of points on the BER curve
 
-
-
-%% ========================= Communication Chain =====================
 % ---- CFO and Sample Time Offset Parameters ----
 Fc = 600e6;                                   % Carrier frequency in Hz
 ppm = 1;
@@ -39,6 +36,7 @@ phi_0 = 0*randi([0 12]) * (pi/12);            % Phase offset in rad
 timing_offset_norm = 0.01;                    % Normalized timing offset (% of symbol period)
 initial_offset_samples = round(timing_offset_norm * OSF); % Initial offset in samples (1 sample)
 
+%% ========================= Communication Chain =====================
 % --- Transmitter  ---
 bit_tx = randi([0, 1], 1, NumBits).';
 symb_tx = mapping(bit_tx, Nbps, ModType);
