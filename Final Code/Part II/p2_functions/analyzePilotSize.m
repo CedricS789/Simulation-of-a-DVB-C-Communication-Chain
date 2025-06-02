@@ -53,8 +53,8 @@ function analyzePilotSize(params, pilot_pos, EbN0_domain_dB_plot, num_iterations
         end
     end
 
-    title_str_cfo = sprintf('Impact of Pilot Length N on CFO estimation (K=%d, %d-%s)', K_fixed, ModOrder, upper(ModType));
-    title_str_toa = sprintf('Impact of Pilot Length N on ToA estimation (K=%d, %d-%s)', K_fixed, ModOrder, upper(ModType));
+    title_str_cfo = sprintf('Impact of Pilot Length (K=%d, %d-%s)', K_fixed, ModOrder, upper(ModType));
+    title_str_toa = sprintf('Impact of Pilot Length (K=%d, %d-%s)', K_fixed, ModOrder, upper(ModType));
     figure;
     set(gcf, 'Name', title_str_cfo);
     clf;
@@ -64,13 +64,14 @@ function analyzePilotSize(params, pilot_pos, EbN0_domain_dB_plot, num_iterations
         hold on;
     end
     grid on;
-    xlabel('Ratio $E_b/N_0$ [dB]', 'Interpreter', 'latex', 'FontSize', 20);
-    ylabel('Std. Dev. of Frequency Error (ppm)', 'Interpreter', 'latex', 'FontSize', 20);
+    xlabel('Ratio $E_b/N_0$ [dB]', 'Interpreter', 'latex', 'FontSize', 30);
+    ylabel('Std. Dev. of Frequency Error (ppm)', 'Interpreter', 'latex', 'FontSize', 30);
     title(title_str_cfo, 'Interpreter', 'latex', 'FontSize', 30);
     legend('show', 'Location', 'northeast', 'Interpreter', 'latex', 'FontSize', 30);
     ax = gca;
+    ax.GridAlpha = 0.5;
     ax.XTick = EbN0_domain_dB_plot(1):2:EbN0_domain_dB_plot(end);
-    set(gca, 'FontSize', 20);
+    set(gca, 'FontSize', 30);
     hold off;
     figure;
     set(gcf, 'Name', title_str_toa);
@@ -81,12 +82,13 @@ function analyzePilotSize(params, pilot_pos, EbN0_domain_dB_plot, num_iterations
         hold on;
     end
     grid on;
-    xlabel('Ratio $E_b/N_0$ [dB]', 'Interpreter', 'latex', 'FontSize', 20);
-    ylabel('Std. Dev. of ToA Error (samples)', 'Interpreter', 'latex', 'FontSize', 20);
+    xlabel('Ratio $E_b/N_0$ [dB]', 'Interpreter', 'latex', 'FontSize', 30);
+    ylabel('Std. Dev. of ToA Error (samples)', 'Interpreter', 'latex', 'FontSize', 30);
     title(title_str_toa, 'Interpreter', 'latex', 'FontSize', 30);
     legend('show', 'Location', 'northeast', 'Interpreter', 'latex', 'FontSize', 30);
     ax = gca;
+    ax.GridAlpha = 0.5;
     ax.XTick = EbN0_domain_dB_plot(1):2:EbN0_domain_dB_plot(end);
-    set(gca, 'FontSize', 20);
+    set(gca, 'FontSize', 30);
     hold off;
 end

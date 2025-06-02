@@ -36,7 +36,7 @@ Fc = 600e6;                                   % Carrier frequency in Hz
 ppm = 1;
 delta_cfo = ppm * 1e-6 * Fc;                  % Frequency offset in Hz (0.08 ppm)
 phi_0 = 0*randi([0 12]) * (pi/12);            % Phase offset in rad
-timing_offset_norm = 0.01;                  % Normalized timing offset (% of symbol period)
+timing_offset_norm = 0.01;                    % Normalized timing offset (% of symbol period)
 initial_offset_samples = round(timing_offset_norm * OSF); % Initial offset in samples (1 sample)
 
 % --- Transmitter  ---

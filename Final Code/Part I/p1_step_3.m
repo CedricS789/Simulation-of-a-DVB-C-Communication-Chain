@@ -1,10 +1,10 @@
-%%   =================== p1_step_2 - Simulation for BER Curve Generation ===================
+%%   =================== p1_step_3 - Simulation for BER Curve Generation ===================
 clear; close all; clc;
 addpath('p1_functions'); 
 
 
 %% =================== Load Simulation Parameters  ===================
-Nbps = 4;
+Nbps = 2;
 params = initParameters(Nbps);
 displayParameters(params);
 NumBits = params.timing.NumBits;
@@ -61,7 +61,7 @@ plotFilterCharacteristics(g_rrc, Beta, Fs, OSF);
 
 
 %% ========================= BER (Multiple Modulations) ======================
-nbps_values = [1 2, 3, 4, 5 6, 7, 8];
+nbps_values = [1, 2, 3, 4, 5, 6, 7, 8];
 g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps);
 all_ber_data_modulation = zeros(num_EbN0_points, length(nbps_values));
 
@@ -88,15 +88,15 @@ for idx_nbps = 1:length(nbps_values)
     EbN0_domain_dB = params.simulation.EbN0_domain_dB;      % Range of Eb/N0 values to simulate (dB)
     num_EbN0_points = length(EbN0_domain_dB);               % Number of points on the BER curve
 
-    current_mod_order = 2^current_nbps;
+    current_mod_order = ModOrder;
 
     ber_data_one_modulation = zeros(num_EbN0_points, 1);
     for idx_EbN0 = 1:num_EbN0_points
         EbN0dB = params.simulation.EbN0_domain_dB(idx_EbN0);
         bit_tx = randi([0, 1], 1, NumBits).'; 
         symb_tx = mapping(bit_tx, current_nbps, ModType);
-        symb_tx = upSampler(symb_tx, OSF).'; 
-        signal_tx_filtered = applyFilter(symb_tx, g_rrc, NumTaps); 
+        symb_tx_up = upSampler(symb_tx, OSF).'; 
+        signal_tx_filtered = applyFilter(symb_tx_up, g_rrc, NumTaps); 
         signalPower = mean(abs(signal_tx_filtered).^2);
 
         current_bit_rate = SymRate * current_nbps; 
@@ -105,8 +105,6 @@ for idx_nbps = 1:length(nbps_values)
         total_bit_errors_point = 0;
         total_bits_sim_point = 0;
 
-        time_vector = (0:length(signal_tx_filtered)-1).' * Ts; 
-        time_vector_symb = (0:length(symb_tx)-1).' * Tsymb; 
 
         for iter = 1:iterations 
             signal_tx_noisy = addAWGN(signal_tx_filtered, Eb, EbN0dB, OSF, SymRate); 

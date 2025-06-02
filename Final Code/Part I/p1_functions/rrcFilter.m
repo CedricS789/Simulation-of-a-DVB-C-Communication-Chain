@@ -33,7 +33,7 @@ function g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps)
            h_rc = conv(g_rrc, g_rrc);                   % Normalized h
     
     
-            % Plots
+            % % Plots
             % figure;
             % ax1 = gca;
             % plot(ax1, freq / 1e6, abs(H_RC), 'Color', [0 0.4470 0.7410], 'LineWidth', 2, 'Marker', 'o', 'MarkerFaceColor', [0 0.4470 0.7410], 'DisplayName', '$|H(f)|$');
@@ -44,23 +44,23 @@ function g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps)
             % plot(ax1, [-f2_hz, -f2_hz]/1e6, ylim(ax1), 'g--', 'LineWidth', 1.5, 'HandleVisibility', 'off');
             % hold(ax1, 'off');
             % grid(ax1, 'on');
-            % 
+
             % xlabel(ax1, 'Frequency (MHz)', 'Interpreter', 'latex', 'FontSize', 30);
             % ylabel(ax1, 'Magnitude', 'Interpreter', 'latex', 'FontSize', 30);
             % title(ax1, ['Raised Cosine Filter Discrete Frequency Points ($\beta$ = ', num2str(Beta), ', Taps = ', num2str(NumTaps), ')'], 'Interpreter', 'latex', 'FontSize', 30);
             % legend(ax1, 'show', 'Location', 'best', 'Interpreter', 'latex', 'FontSize', 30);
-            % 
+
             % xlim(ax1, [-7, 7]);
             % ylim(ax1, [-0.1, 2.2]*1e-7);
-            % 
+
             % ax1.GridLineWidth = 2;
             % ax1.GridColor = [0.3 0.3 0.3];
             % ax1.GridAlpha = 0.5;
             % ax1.TickLabelInterpreter = 'latex';
             % ax1.FontSize = 30;
             % box(ax1, 'on');
-            % 
-            % 
+
+
             % figure;
             % ax2 = gca;
             % Ts = 1 / Fs;
@@ -72,23 +72,23 @@ function g_rrc = rrcFilter(Beta, SymRate, OSF, NumTaps)
             % sampling_indices = center_idx_rc + k_values * OSF;
             % h_Tsymb = h_rc(sampling_indices);
             % k_Tsymb = (k_values * Tsymb);
-            % 
+
             % stem(ax2, k_Tsymb * 1e6, h_Tsymb, 'Color', [0 0.4470 0.7410], 'LineWidth', 4, 'MarkerFaceColor', [0 0.4470 0.7410], 'Marker', 'o', 'DisplayName', '$h(kT_{symb})$');
             % hold(ax2, 'on');
             % plot(ax2, t_rc * 1e6, h_rc, 'DisplayName', '$h(t)$', 'Color', [0.8500 0.3250 0.0980], 'LineWidth', 2);
             % plot(ax2, t_rrc * 1e6, g_rrc, 'Color', [0.4660 0.6740 0.1880], 'LineWidth', 2, 'LineStyle','--', 'DisplayName', '$g(t)$');
             % hold(ax2, 'off');
             % grid(ax2, 'on');
-            % 
-            % 
+
+
             % xlabel(ax2, 'Time ($\mu s$)', 'Interpreter', 'latex', 'FontSize', 30);
             % ylabel(ax2, 'Amplitude', 'Interpreter', 'latex', 'FontSize', 30);
             % title(ax2, 'Normalized RC and RRC Filter Impulse Responses', 'Interpreter', 'latex', 'FontSize', 30);
             % legend(ax2, 'show', 'Location', 'best', 'Interpreter', 'latex', 'FontSize', 30);
-            % 
+
             % xlim(ax2, [-2, 2]);
             % ylim(ax2, [-0.3 1.1]);
-            % 
+
             % ax2.GridLineWidth = 2;
             % ax2.GridColor = [0.3 0.3 0.3];
             % ax2.GridAlpha = 0.5;
