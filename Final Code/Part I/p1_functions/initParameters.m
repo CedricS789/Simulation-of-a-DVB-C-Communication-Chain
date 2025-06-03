@@ -10,7 +10,6 @@ function params = initParameters(Nbps)
         %       params - Struct containing all parameters for the modulation scheme (Nbps).
 
 
-
         % =====================================================================
         % == Modulation Parameters ==
         % =====================================================================
@@ -24,10 +23,11 @@ function params = initParameters(Nbps)
             params.modulation.ModulationType = 'qam';
         end
 
+
         % =====================================================================
         % == Timing and Rate Parameters ==
         % =====================================================================
-        params.timing.NumBits = params.modulation.Nbps * 2^15;                          % Total data bits (multiple of Nbps)
+        params.timing.NumBits = params.modulation.Nbps * 2^12;                          % Total data bits (multiple of Nbps)
         params.timing.NumSymbols = params.timing.NumBits / params.modulation.Nbps;      % Total number of symbols
         params.timing.SymbolRate = 5e6;                                                 % Symbol rate (Rs) [Hz]
         params.timing.SymbolPeriod = 1 / params.timing.SymbolRate;                      % Ts [s]
@@ -35,12 +35,6 @@ function params = initParameters(Nbps)
         params.timing.BitPeriod = 1 / params.timing.BitRate;                            % Tb [s]
         params.timing.StreamDuration = params.timing.NumBits / params.timing.BitRate;   % Total time [s]
 
-        % =====================================================================
-        % == Filter Parameters ==
-        % =====================================================================
-        params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
-        params.filter.NumFilterTaps =  501;                                                             % RRC Filter length (odd recommended)
-        params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
 
         % =====================================================================
         % == Sampling Parameters ==
@@ -48,6 +42,15 @@ function params = initParameters(Nbps)
         params.sampling.OversamplingFactor = 16;                                                            % Samples per symbol (OSF >= 2)
         params.sampling.SamplingFrequency = params.sampling.OversamplingFactor * params.timing.SymbolRate;  % Fs [Hz]
         params.sampling.SamplePeriod = 1 / params.sampling.SamplingFrequency;                               % Tsamp [s]
+
+        
+        % =====================================================================
+        % == Filter Parameters ==
+        % =====================================================================
+        params.filter.RolloffFactor = 0.2;                                                              % RRC Roll-off factor (Beta)
+        params.filter.NumFilterTaps =  16 * params.sampling.OversamplingFactor + 1;                     % RRC Filter length (odd recommended)
+        params.filter.SignalBandwidth = (1 + params.filter.RolloffFactor) * params.timing.SymbolRate;   % Two-sided signal bandwidth: BW = Rs * (1 + Beta) [Hz]
+
 
         % =====================================================================
         % == BER Curve Simulation Parameters ==
@@ -60,5 +63,5 @@ function params = initParameters(Nbps)
         min = params.simulation.EbN0_min_dB;                   % Minimum Eb/N0 value in dB
         max = params.simulation.EbN0_max_dB;                   % Maximum Eb/N0 value in dB
         iter = params.simulation.EbN0_step_dB;                 % Step size for Eb/N0 sweep in dB
-        params.simulation.EbN0_domain_dB = (min:iter:max).';    % Range of Eb/N0 values to simulate (dB)
+        params.simulation.EbN0_domain_dB = (min:iter:max).';   % Range of Eb/N0 values to simulate (dB)
 end

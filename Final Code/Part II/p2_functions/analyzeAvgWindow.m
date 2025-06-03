@@ -42,8 +42,8 @@ function analyzeAvgWindow(params, pilot_pos, EbN0_domain_dB_plot, num_iterations
                 time_vector = (0 : length(signal_tx_filtered) - 1).' * Ts;
                 signal_tx_noisy = addAWGN(signal_tx_filtered, Eb, current_EbN0dB, OSF, SymRate);
                 signal_tx_distorted = signal_tx_noisy .* exp(1j * (2 * pi * delta_cfo * time_vector + phi_0));
-                signal_rx = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
-                symb_rx_down = downSampler(signal_rx, OSF);
+                signal_rx_matched_filtered = applyFilter(signal_tx_distorted, g_rrc, NumTaps);
+                symb_rx_down = downSampler(signal_rx_matched_filtered, OSF);
                 [toa, delta_cfo_hat] = frameFreqAcquisition(pilot, symb_rx_down, current_K, Tsymb);
                 temp_cfo_errors_hz(iter_std) = delta_cfo - delta_cfo_hat;
                 temp_toa_errors(iter_std) = pilot_position - toa;
